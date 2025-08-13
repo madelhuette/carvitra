@@ -13,6 +13,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Alle UI-Elemente müssen aus der Untitled UI Bibliothek stammen
 - Theming und Dark/Light Mode über Untitled UI System
 
+**KRITISCH: Komponenten-Verwendung**
+- NIEMALS neue Komponenten erstellen, die bestehende Untitled UI Komponenten ersetzen oder kopieren
+- IMMER die originalen Untitled UI Komponenten direkt verwenden
+- Anpassungen AUSSCHLIESSLICH über Props (items, labels, colors, sizes, etc.)
+- Bei Bedarf: Wrapper-Komponenten die die originale Komponente EINBINDEN, nicht ersetzen
+- KEINE Forks, Kopien oder Nachbauten von Untitled UI Komponenten
+
+**Beispiel für korrekte Verwendung:**
+```tsx
+// ✅ RICHTIG: Original-Komponente mit Props
+import { Header } from "@/components/marketing/header-navigation/components/header";
+<Header items={customItems} />
+
+// ❌ FALSCH: Neue Komponente als Ersatz erstellen
+<CarvtraHeader /> // NIEMALS eigene Versionen von UI-Komponenten erstellen!
+```
+
 ## Projektübersicht
 
 CARVITRA ist eine innovative Plattform für Autohändler zur digitalen Vermarktung von Leasing- und Kaufangeboten. Die Plattform ermöglicht es Händlern und Verkäufern, ohne technisches Wissen oder externe Dienstleister, professionelle Landing Pages für ihre Fahrzeugangebote zu erstellen.
