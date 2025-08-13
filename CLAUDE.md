@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - KEINE Custom-Komponenten ohne explizite Zustimmung
 - Alle UI-Elemente müssen aus der Untitled UI Bibliothek stammen
 - Theming und Dark/Light Mode über Untitled UI System
+- **Icons**: AUSSCHLIESSLICH aus @untitledui/icons - KEINE custom SVGs, KEINE anderen Icon-Libraries
 
 **KRITISCH: Komponenten-Verwendung**
 - NIEMALS neue Komponenten erstellen, die bestehende Untitled UI Komponenten ersetzen oder kopieren
@@ -577,3 +578,121 @@ Automatische Sortierung in folgender Reihenfolge:
 - `src/styles/globals.css`: Globale Styles und Tailwind-Direktiven
 - `src/providers/`: Theme und Router Provider
 - `src/lib/utils.ts`: Utility-Funktionen (cx, sortCx)
+
+## 📚 Entwicklungs-Learnings (Landing Page Implementation)
+
+### Icon-Mapping Erfahrungen
+**Problem**: Viele Icon-Namen aus anderen Libraries existieren nicht in @untitledui/icons
+
+**Lösungen gefunden**:
+```typescript
+// ❌ Existieren NICHT in @untitledui/icons:
+Brain → Lightbulb04           // KI/Intelligenz Icons
+FileText → File02             // Dokument Icons  
+BookClosed → BookOpen01       // Buch Icons
+FileUpload01 → Upload01       // Upload Icons
+TrendingUp02 → TrendUp02      // Trend Icons
+Truck → Truck02              // Fahrzeug Icons
+Book01 → BookOpen01          // Weitere Buch Icons
+```
+
+**Best Practice**: Immer zuerst in der Untitled UI Icons Dokumentation prüfen!
+
+### Theme-Implementation (Dark/Light Mode)
+
+**Kritische Erkenntnisse**:
+1. **Semantische Farben nutzen**: `bg-primary`, `bg-secondary`, `text-primary` statt hardcoded Farben
+2. **Custom SVGs vermeiden**: ALLE Icons müssen aus @untitledui/icons stammen 
+3. **Theme Toggle Placement**: Header (Desktop + Mobile) ist optimal für UX
+4. **Dynamic Classes vermeiden**: `bg-${color}-50` funktioniert nicht - nur statische Klassen
+
+**Erfolgreiche Implementierung**:
+```typescript
+// ✅ Korrekt: useTheme Hook mit next-themes
+const { theme, setTheme } = useTheme();
+
+// ✅ Theme Toggle Button
+<Button
+  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+  iconOnly
+>
+  {theme === 'dark' ? <Sun /> : <Moon01 />}
+</Button>
+
+// ✅ Semantische Farben für konsistentes Theming
+<div className="bg-primary text-primary">
+  // Reagiert automatisch auf Theme-Wechsel
+</div>
+```
+
+### Landing Page Architektur
+
+**Erfolgreiche Struktur**:
+```
+src/components/marketing/
+├── header-navigation/          # Navigation & Theme Toggle
+├── hero-section.tsx           # Hauptbereich mit CTA
+├── features-section.tsx       # 3-Spalten Features
+├── how-it-works-section.tsx   # 4-Schritt Prozess
+├── benefits-section.tsx       # Zielgruppen-Benefits
+├── pricing-section.tsx        # Token-Pricing
+└── footer-section.tsx         # Footer mit Newsletter
+```
+
+**Lessons Learned**:
+1. **Modulare Sektionen**: Jede Sektion als eigene Komponente für Wiederverwendbarkeit
+2. **Responsive Design**: Mobile-first mit lg: Breakpoints
+3. **Semantic HTML**: Richtige Struktur für SEO (header, main, nav, section)
+4. **Icon-Konsistenz**: Einheitliches Icon-Set aus Untitled UI für professionelles Erscheinungsbild
+
+### FeaturedIcon Component Erkenntnisse
+
+**Problem**: `theme="light-blue"` existiert nicht in Untitled UI
+
+**Lösung**:
+```typescript
+// ❌ Falsch:
+<FeaturedIcon theme="light-blue" />
+
+// ✅ Richtig:
+<FeaturedIcon theme="light" color="brand" />
+```
+
+### Entwicklungsprozess Best Practices
+
+**1. Systematische Herangehensweise**:
+- Erst Struktur planen (TodoWrite für Überblick)
+- Komponente für Komponente implementieren
+- Kontinuierlich testen (npm run dev)
+- Finale Code-Analyse vor Commit
+
+**2. Theme-Consistency Workflow**:
+- Alle Komponenten mit semantischen Farben entwickeln
+- Theme Toggle früh implementieren
+- Regelmäßig zwischen Dark/Light wechseln zum Testen
+- Finale Review aller Hintergründe und Texte
+
+**3. Icon-Integration Workflow**:
+- Niemals Custom SVGs verwenden
+- Bei unklaren Icon-Namen: Untitled UI Dokumentation konsultieren
+- Alternative Icons aus @untitledui/icons suchen
+- Konsistenz über perfekte Icon-Matches priorisieren
+
+### Performance & SEO Optimierungen
+
+**Implementiert**:
+- Server-Side Rendering (SSR) für Landing Page
+- Semantic HTML5 Structure
+- Responsive Images (falls verwendet)
+- Core Web Vitals optimierte Komponenten
+
+### Automotive-spezifische Anpassungen
+
+**Erfolgreich umgesetzt**:
+- KI-PDF-Extraktion als Kernfeature positioniert
+- Automotive-Navigation (Fahrzeugkategorien, Finanzierung)
+- Händler/Verkäufer-orientierte Benefits
+- Token-basiertes Pricing-Model
+- EnVKV-Compliance vorbereitet (Dokumentation)
+
+**Fazit**: Die systematische Verwendung von ausschließlich Untitled UI Komponenten führt zu einer konsistenten, professionellen und wartbaren Codebase. Die Theme-Integration funktioniert nahtlos und die modulare Architektur ermöglicht einfache Erweiterungen.

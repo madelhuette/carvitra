@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
-import { ChevronDown } from "@untitledui/icons";
+import { ChevronDown, Moon01, Sun, Menu01, X } from "@untitledui/icons";
+import { useTheme } from "next-themes";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Popover as AriaPopover } from "react-aria-components";
 import { Button } from "@/components/base/buttons/button";
-import { UntitledLogo } from "@/components/foundations/logo/untitledui-logo";
-import { UntitledLogoMinimal } from "@/components/foundations/logo/untitledui-logo-minimal";
-import { DropdownMenuSimple } from "@/components/marketing/header-navigation/dropdown-header-navigation";
+import { CarvtraLogo, CarvtraLogoMinimal } from "@/components/foundations/logo/carvitra-logo";
+import { PlatformDropdown, ResourceDropdown, PricingDropdown } from "@/components/marketing/header-navigation/automotive-dropdown-navigation";
 import { cx } from "@/utils/cx";
 
 type HeaderNavItem = {
@@ -17,22 +17,21 @@ type HeaderNavItem = {
 };
 
 const headerNavItems: HeaderNavItem[] = [
-    { label: "Products", href: "/products", menu: <DropdownMenuSimple /> },
-    { label: "Services", href: "/Services", menu: <DropdownMenuSimple /> },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Resources", href: "/resources", menu: <DropdownMenuSimple /> },
-    { label: "About", href: "/about" },
+    { label: "Plattform", menu: <PlatformDropdown /> },
+    { label: "Preise", href: "#pricing", menu: <PricingDropdown /> },
+    { label: "Für Händler", href: "#dealers" },
+    { label: "Ressourcen", menu: <ResourceDropdown /> },
 ];
 
 const footerNavItems = [
-    { label: "About us", href: "/" },
-    { label: "Press", href: "/products" },
-    { label: "Careers", href: "/resources" },
-    { label: "Legal", href: "/pricing" },
-    { label: "Support", href: "/pricing" },
-    { label: "Contact", href: "/pricing" },
-    { label: "Sitemap", href: "/pricing" },
-    { label: "Cookie settings", href: "/pricing" },
+    { label: "Über uns", href: "#about" },
+    { label: "Karriere", href: "#careers" },
+    { label: "Presse", href: "#press" },
+    { label: "Support", href: "#support" },
+    { label: "Kontakt", href: "#contact" },
+    { label: "Datenschutz", href: "#privacy" },
+    { label: "AGB", href: "#terms" },
+    { label: "Impressum", href: "#imprint" },
 ];
 
 const MobileNavItem = (props: { className?: string; label: string; href?: string; children?: ReactNode }) => {
@@ -80,9 +79,9 @@ const MobileFooter = () => {
                 </ul>
             </div>
             <div className="flex flex-col gap-3">
-                <Button size="lg">Sign up</Button>
+                <Button size="lg">Demo starten</Button>
                 <Button color="secondary" size="lg">
-                    Log in
+                    Anmelden
                 </Button>
             </div>
         </div>
@@ -98,6 +97,7 @@ interface HeaderProps {
 
 export const Header = ({ items = headerNavItems, isFullWidth, isFloating, className }: HeaderProps) => {
     const headerRef = useRef<HTMLElement>(null);
+    const { theme, setTheme } = useTheme();
 
     return (
         <header
@@ -117,8 +117,8 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                     )}
                 >
                     <div className="flex flex-1 items-center gap-5">
-                        <UntitledLogo className="h-8 md:max-lg:hidden" />
-                        <UntitledLogoMinimal className="hidden h-8 md:inline-block lg:hidden" />
+                        <CarvtraLogo className="h-8 md:max-lg:hidden" />
+                        <CarvtraLogoMinimal className="hidden h-8 md:inline-block lg:hidden" />
 
                         {/* Desktop navigation */}
                         <nav className="max-md:hidden">
@@ -177,15 +177,36 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                     </div>
 
                     <div className="hidden items-center gap-3 md:flex">
+                        <Button
+                            color="tertiary"
+                            size={isFloating ? "md" : "lg"}
+                            iconOnly
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+                        </Button>
                         <Button color="secondary" size={isFloating ? "md" : "lg"}>
-                            Log in
+                            Anmelden
                         </Button>
                         <Button color="primary" size={isFloating ? "md" : "lg"}>
-                            Sign up
+                            Demo starten
                         </Button>
                     </div>
 
-                    {/* Mobile menu and menu trigger */}
+                    {/* Mobile: Theme Toggle and Menu */}
+                    <div className="flex items-center gap-2 md:hidden">
+                        <Button
+                            color="tertiary"
+                            size="sm"
+                            iconOnly
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+                        </Button>
+
+                    {/* Mobile menu trigger */}
                     <AriaDialogTrigger>
                         <AriaButton
                             aria-label="Toggle navigation menu"
@@ -197,24 +218,8 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                                 )
                             }
                         >
-                            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    className="hidden text-secondary group-aria-expanded:block"
-                                    d="M18 6L6 18M6 6L18 18"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                                <path
-                                    className="text-secondary group-aria-expanded:hidden"
-                                    d="M3 12H21M3 6H21M3 18H21"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
+                            <X className="hidden size-6 text-secondary group-aria-expanded:block" />
+                            <Menu01 className="size-6 text-secondary group-aria-expanded:hidden" />
                         </AriaButton>
                         <AriaPopover
                             triggerRef={headerRef}
@@ -243,6 +248,7 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                             </AriaDialog>
                         </AriaPopover>
                     </AriaDialogTrigger>
+                    </div>
                 </div>
             </div>
         </header>
