@@ -96,8 +96,8 @@ export const ForgotPasswordForm = ({
                         color="tertiary"
                         size="lg"
                         onClick={onBack}
+                        iconLeading={ArrowLeft}
                     >
-                        <ArrowLeft className="size-4" />
                         Zurück zum Login
                     </Button>
                 </div>
@@ -158,8 +158,8 @@ export const ForgotPasswordForm = ({
                         className="w-full"
                         disabled={isLoading}
                         loading={isLoading}
+                        iconLeading={Mail01}
                     >
-                        <Mail01 className="size-4" />
                         Link senden
                     </Button>
 
@@ -170,8 +170,8 @@ export const ForgotPasswordForm = ({
                         className="w-full"
                         onClick={onBack}
                         disabled={isLoading}
+                        iconLeading={ArrowLeft}
                     >
-                        <ArrowLeft className="size-4" />
                         Zurück zum Login
                     </Button>
                 </div>

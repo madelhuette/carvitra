@@ -33,8 +33,8 @@ export const SocialLogin = ({
                     className="w-full"
                     onClick={onGoogleLogin}
                     disabled={isLoading}
+                    iconLeading={Google}
                 >
-                    <Google className="size-4" />
                     Mit Google anmelden
                 </Button>
                 
@@ -44,8 +44,8 @@ export const SocialLogin = ({
                     className="w-full"
                     onClick={onFacebookLogin}
                     disabled={isLoading}
+                    iconLeading={Facebook}
                 >
-                    <Facebook className="size-4" />
                     Mit Facebook anmelden
                 </Button>
                 
@@ -55,8 +55,8 @@ export const SocialLogin = ({
                     className="w-full"
                     onClick={onLinkedinLogin}
                     disabled={isLoading}
+                    iconLeading={LinkedIn}
                 >
-                    <LinkedIn className="size-4" />
                     Mit LinkedIn anmelden
                 </Button>
             </div>

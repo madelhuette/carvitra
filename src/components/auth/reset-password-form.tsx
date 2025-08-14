@@ -151,8 +151,8 @@ export const ResetPasswordForm = ({
                     className="w-full"
                     disabled={isLoading || passwordStrength < MIN_PASSWORD_STRENGTH}
                     loading={isLoading}
+                    iconLeading={Lock01}
                 >
-                    <Lock01 className="size-4" />
                     Passwort zurücksetzen
                 </Button>
             </form>

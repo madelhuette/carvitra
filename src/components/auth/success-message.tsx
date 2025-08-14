@@ -135,8 +135,8 @@ export const SuccessMessage = ({
                             className="w-full"
                             onClick={onContinue}
                             href="/dashboard"
+                            iconTrailing={ArrowRight}
                         >
-                            <ArrowRight className="size-4" />
                             Zur Plattform
                         </Button>
                         
@@ -150,8 +150,8 @@ export const SuccessMessage = ({
                                 onClick={onResendEmail}
                                 disabled={isResendLoading}
                                 loading={isResendLoading}
+                                iconLeading={Mail01}
                             >
-                                <Mail01 className="size-4" />
                                 E-Mail erneut senden
                             </Button>
                         </div>
@@ -164,8 +164,8 @@ export const SuccessMessage = ({
                         className="w-full"
                         onClick={onContinue}
                         href="/dashboard"
+                        iconTrailing={ArrowRight}
                     >
-                        <ArrowRight className="size-4" />
                         Jetzt starten
                     </Button>
                 )}
@@ -175,8 +175,8 @@ export const SuccessMessage = ({
                         size="lg"
                         className="w-full"
                         href="/auth/login"
+                        iconTrailing={ArrowRight}
                     >
-                        <ArrowRight className="size-4" />
                         Zur Anmeldung
                     </Button>
                 )}

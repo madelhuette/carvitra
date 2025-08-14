@@ -124,8 +124,8 @@ export const LoginForm = ({ onSubmit, isLoading = false, error }: LoginFormProps
                     className="w-full"
                     disabled={isLoading}
                     loading={isLoading}
+                    iconLeading={LogIn01}
                 >
-                    <LogIn01 className="size-4" />
                     Anmelden
                 </Button>
             </form>

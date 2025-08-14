@@ -6,7 +6,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import { RadioButtons } from "@/components/base/radio-buttons/radio-buttons";
+import { RadioGroup, RadioButton } from "@/components/base/radio-buttons/radio-buttons";
 import { SocialLogin } from "./social-login";
 import { PasswordInput } from "./password-input";
 import { validateEmail, validatePhone, validateRequired, validatePasswordMatch } from "@/utils/validation";
@@ -24,10 +24,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
     const [formData, setFormData] = useState<RegisterFormData>(DEFAULT_REGISTER_FORM);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
-    const userTypeOptions = USER_TYPE_OPTIONS.map(option => ({
-        ...option,
-        icon: option.value === "dealer" ? <Building02 className="size-4" /> : <User01 className="size-4" />
-    }));
+    // USER_TYPE_OPTIONS direkt verwenden - Icons werden in RadioButton Labels integriert
 
 
     const validateForm = () => {
@@ -116,12 +113,28 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                 <div>
                     <Label>Ich bin ein</Label>
                     <div className="mt-2">
-                        <RadioButtons
-                            options={userTypeOptions}
+                        <RadioGroup
                             value={formData.userType}
                             onChange={(value) => updateFormData("userType", value)}
                             name="userType"
-                        />
+                        >
+                            {USER_TYPE_OPTIONS.map(option => (
+                                <RadioButton
+                                    key={option.value}
+                                    value={option.value}
+                                    label={
+                                        <>
+                                            {option.value === "dealer" ? (
+                                                <Building02 className="size-4 inline-block align-middle mr-2" />
+                                            ) : (
+                                                <User01 className="size-4 inline-block align-middle mr-2" />
+                                            )}
+                                            {option.label}
+                                        </>
+                                    }
+                                />
+                            ))}
+                        </RadioGroup>
                     </div>
                 </div>
 
@@ -286,8 +299,8 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                     className="w-full"
                     disabled={isLoading}
                     loading={isLoading}
+                    iconLeading={UserPlus01}
                 >
-                    <UserPlus01 className="size-4" />
                     Konto erstellen
                 </Button>
             </form>

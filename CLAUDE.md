@@ -709,19 +709,19 @@ src/components/marketing/
 // ❌ FALSCH - führt zu Export-Fehler:
 import { Linkedin } from "@/components/foundations/social-icons";
 import { CheckCircle2 } from "@untitledui/icons";
+import { RadioButtons } from "@/components/base/radio-buttons/radio-buttons";
 
 // ✅ RICHTIG - korrektes Naming:
 import { LinkedIn } from "@/components/foundations/social-icons";
 import { CheckCircle } from "@untitledui/icons";
+import { RadioGroup, RadioButton } from "@/components/base/radio-buttons/radio-buttons";
 ```
 
-**Betroffene Dateien bei CheckCircle-Fix**:
-- `password-input.tsx`
-- `reset-password-form.tsx`
-- `success-message.tsx`
-- `forgot-password-form.tsx`
+**Betroffene Dateien**:
+- `password-input.tsx`, `reset-password-form.tsx`, `success-message.tsx`, `forgot-password-form.tsx` (CheckCircle-Fix)
+- `register-form.tsx` (RadioButtons → RadioGroup/RadioButton-Fix)
 
-**Best Practice**: IMMER die exakte Schreibweise aus der Komponenten-Library prüfen!
+**Best Practice**: IMMER die exakte Schreibweise und verfügbare Exports aus der Komponenten-Library prüfen!
 
 ### Code-Refactoring Best Practices
 
@@ -832,9 +832,46 @@ src/
 2. Props-basierte Komponenten für Unit Tests
 3. Konsistente Validation für E2E Tests
 
+### Button Icon-Positionierung (Kritisches Learning)
+
+**Problem**: Icons in Buttons erscheinen oberhalb oder versetzt zum Text statt korrekt ausgerichtet
+
+**Root Cause**: Icons wurden als `children` verwendet statt als Untitled UI Button Props
+
+**Lösung**:
+```typescript
+// ❌ FALSCH - Icon als child:
+<Button>
+    <LogIn01 className="size-5" />
+    Anmelden
+</Button>
+
+// ✅ RICHTIG - Icon als prop:
+<Button iconLeading={LogIn01}>
+    Anmelden
+</Button>
+
+// ✅ Für trailing Icons (Weiter-Buttons):
+<Button iconTrailing={ArrowRight}>
+    Zur Plattform
+</Button>
+```
+
+**Wichtige Erkenntnisse**:
+1. **iconLeading**: Icon links vom Text (Standard für Aktions-Buttons)
+2. **iconTrailing**: Icon rechts vom Text (für Navigation/Weiter-Buttons)  
+3. **Automatische Größe**: Button übernimmt `size-5` automatisch - keine `className` nötig
+4. **Perfekte Ausrichtung**: Untitled UI Button-Logik sorgt für korrekte Flexbox-Positionierung
+
+**Betroffene Button-Typen**:
+- **Social Login**: Google, Facebook, LinkedIn (`iconLeading`)
+- **Form Actions**: LogIn01, UserPlus01, Lock01, Mail01 (`iconLeading`)
+- **Navigation**: ArrowLeft (`iconLeading`), ArrowRight (`iconTrailing`)
+
 ### Metriken nach Refactoring
 
 - **~35% Code-Reduktion** durch Wiederverwendung
 - **100% Type-Coverage** für Auth-System
 - **Bessere Wartbarkeit** durch zentrale Utilities
 - **Konsistente UX** durch gemeinsame Komponenten
+- **Perfekte Button Icon-Ausrichtung** durch korrekte Untitled UI Props
