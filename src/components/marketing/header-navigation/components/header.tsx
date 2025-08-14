@@ -80,7 +80,7 @@ const MobileFooter = () => {
             </div>
             <div className="flex flex-col gap-3">
                 <Button size="lg">Demo starten</Button>
-                <Button color="secondary" size="lg">
+                <Button color="secondary" size="lg" href="/auth/login">
                     Anmelden
                 </Button>
             </div>
@@ -186,7 +186,7 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                         >
                             {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
                         </Button>
-                        <Button color="secondary" size={isFloating ? "md" : "lg"}>
+                        <Button color="secondary" size={isFloating ? "md" : "lg"} href="/auth/login">
                             Anmelden
                         </Button>
                         <Button color="primary" size={isFloating ? "md" : "lg"}>
