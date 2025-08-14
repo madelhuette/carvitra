@@ -586,7 +586,7 @@ Automatische Sortierung in folgender Reihenfolge:
 
 **Lösungen gefunden**:
 ```typescript
-// ❌ Existieren NICHT in @untitledui/icons:
+// ❌ Existieren NICHT in @untitledui/icons → ✅ Korrekte Namen:
 Brain → Lightbulb04           // KI/Intelligenz Icons
 FileText → File02             // Dokument Icons  
 BookClosed → BookOpen01       // Buch Icons
@@ -594,6 +594,7 @@ FileUpload01 → Upload01       // Upload Icons
 TrendingUp02 → TrendUp02      // Trend Icons
 Truck → Truck02              // Fahrzeug Icons
 Book01 → BookOpen01          // Weitere Buch Icons
+CheckCircle2 → CheckCircle    // Check/Success Icons
 ```
 
 **Best Practice**: Immer zuerst in der Untitled UI Icons Dokumentation prüfen!
@@ -699,18 +700,26 @@ src/components/marketing/
 
 ## 📚 Auth-System Implementation Learnings
 
-### Icon-Namen Fallstricke bei Social Icons
+### Icon-Namen Fallstricke
 
-**Problem**: Case-sensitive Icon-Namen können zu Build-Fehlern führen
+**Problem**: Case-sensitive und inkorrekte Icon-Namen können zu Build-Fehlern führen
 
-**Wichtige Korrekturen**:
+**Wichtige Korrekturen im Auth-System**:
 ```typescript
 // ❌ FALSCH - führt zu Export-Fehler:
 import { Linkedin } from "@/components/foundations/social-icons";
+import { CheckCircle2 } from "@untitledui/icons";
 
-// ✅ RICHTIG - korrektes Casing:
+// ✅ RICHTIG - korrektes Naming:
 import { LinkedIn } from "@/components/foundations/social-icons";
+import { CheckCircle } from "@untitledui/icons";
 ```
+
+**Betroffene Dateien bei CheckCircle-Fix**:
+- `password-input.tsx`
+- `reset-password-form.tsx`
+- `success-message.tsx`
+- `forgot-password-form.tsx`
 
 **Best Practice**: IMMER die exakte Schreibweise aus der Komponenten-Library prüfen!
 

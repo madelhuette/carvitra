@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Mail01, Lightbulb04, ArrowRight } from "@untitledui/icons";
+import { CheckCircle, Mail01, Lightbulb04, ArrowRight } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 
 interface SuccessMessageProps {
@@ -24,7 +24,7 @@ export const SuccessMessage = ({
         switch (type) {
             case "registration":
                 return {
-                    icon: <CheckCircle2 className="size-8 text-success-600" />,
+                    icon: <CheckCircle className="size-8 text-success-600" />,
                     bgColor: "bg-success-100",
                     title: `Willkommen bei CARVITRA${userName ? `, ${userName}` : ""}!`,
                     subtitle: "Ihre Registrierung war erfolgreich.",
@@ -52,7 +52,7 @@ export const SuccessMessage = ({
                 };
             case "password-reset":
                 return {
-                    icon: <CheckCircle2 className="size-8 text-success-600" />,
+                    icon: <CheckCircle className="size-8 text-success-600" />,
                     bgColor: "bg-success-100",
                     title: "Passwort erfolgreich geändert!",
                     subtitle: "Ihr neues Passwort ist jetzt aktiv.",
@@ -66,7 +66,7 @@ export const SuccessMessage = ({
                 };
             default:
                 return {
-                    icon: <CheckCircle2 className="size-8 text-success-600" />,
+                    icon: <CheckCircle className="size-8 text-success-600" />,
                     bgColor: "bg-success-100",
                     title: "Erfolgreich!",
                     subtitle: "Die Aktion wurde erfolgreich ausgeführt.",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock01, AlertCircle, CheckCircle2 } from "@untitledui/icons";
+import { Lock01, AlertCircle, CheckCircle } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { PasswordInput } from "./password-input";
 import { 
@@ -65,7 +65,7 @@ export const ResetPasswordForm = ({
             <div className="space-y-6">
                 <div className="text-center">
                     <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success-100">
-                        <CheckCircle2 className="size-6 text-success-600" />
+                        <CheckCircle className="size-6 text-success-600" />
                     </div>
                     <div className="mt-4">
                         <h3 className="text-lg font-semibold text-primary">
@@ -139,7 +139,7 @@ export const ResetPasswordForm = ({
                     />
                     {confirmPassword && password === confirmPassword && (
                         <div className="mt-1 flex items-center gap-2">
-                            <CheckCircle2 className="size-4 text-success-600" />
+                            <CheckCircle className="size-4 text-success-600" />
                             <span className="text-sm text-success-700">Passwörter stimmen überein</span>
                         </div>
                     )}

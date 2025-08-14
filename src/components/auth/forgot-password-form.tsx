@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail01, ArrowLeft, AlertCircle, CheckCircle2 } from "@untitledui/icons";
+import { Mail01, ArrowLeft, AlertCircle, CheckCircle } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
@@ -52,7 +52,7 @@ export const ForgotPasswordForm = ({
             <div className="space-y-6">
                 <div className="text-center">
                     <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success-100">
-                        <CheckCircle2 className="size-6 text-success-600" />
+                        <CheckCircle className="size-6 text-success-600" />
                     </div>
                     <div className="mt-4">
                         <h3 className="text-lg font-semibold text-primary">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, CheckCircle2 } from "@untitledui/icons";
+import { Eye, EyeOff, CheckCircle } from "@untitledui/icons";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { 
@@ -99,7 +99,7 @@ export const PasswordInput = ({
                                         req.met ? 'bg-success-100' : 'bg-gray-100'
                                     }`}>
                                         {req.met && (
-                                            <CheckCircle2 className="size-3 text-success-600" />
+                                            <CheckCircle className="size-3 text-success-600" />
                                         )}
                                     </div>
                                     <span className={`text-xs ${
