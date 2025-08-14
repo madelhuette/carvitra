@@ -84,6 +84,83 @@ CARVITRA ist eine innovative Plattform für Autohändler zur digitalen Vermarktu
 - **Token-Verwaltung**: Supabase Database
 - **Payment Processing**: Noch zu definieren (Stripe/Paddle)
 
+## 🔗 Supabase MCP-Server Integration
+
+### Übersicht
+Das CARVITRA-Projekt nutzt den **Supabase MCP-Server** für direkte Datenbankinteraktionen über Claude Code. Diese Integration ermöglicht es, Datenbankabfragen, Schema-Verifikationen und Datenmanipulationen direkt in der Entwicklungsumgebung durchzuführen, ohne separate Tools oder Interfaces verwenden zu müssen.
+
+### 🚨 KRITISCHE ENTWICKLUNGSRICHTLINIEN - DATENBANK 🚨
+
+**PFLICHT vor jeder datenbankbezogenen Entwicklung:**
+
+1. **IMMER zuerst Supabase-Datenstand über MCP abrufen**
+2. **Datenmodell-Synchronisation prüfen**: Aktuelles Schema mit CLAUDE.md-Dokumentation vergleichen
+3. **Bei Abweichungen**: STOPPEN und Dokumentation aktualisieren
+4. **Single Source of Truth**: Supabase ist die alleinige Quelle der Wahrheit für das Datenbankschema
+
+### Mandatory Workflow für DB-Development
+
+```
+SCHRITT 1: MCP-Datenbankabfrage
+├── Aktuelle Tabellen und Schema abrufen
+├── Mit dokumentiertem Datenmodell vergleichen
+└── Inkonsistenzen identifizieren
+
+SCHRITT 2: Schema-Verification
+├── Bei Übereinstimmung: Entwicklung fortsetzen
+└── Bei Abweichungen: STOPPEN → Dokumentation updaten
+
+SCHRITT 3: Implementierung
+├── Code-Änderungen basierend auf aktuellem Schema
+└── Tests mit realen Supabase-Daten
+```
+
+### Technische Konfiguration
+
+**MCP-Server Setup**:
+```json
+// .mcp.json (Projekt-Root)
+{
+  "servers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "$SUPABASE_ACCESS_TOKEN"
+      }
+    }
+  }
+}
+```
+
+**Environment Variables**:
+```bash
+# .env.local (NIEMALS committen!)
+SUPABASE_ACCESS_TOKEN=sbp_your_personal_access_token_here
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+### Sicherheitsaspekte
+
+- **Read-Only Modus**: MCP-Server standardmäßig auf Lesezugriff beschränkt
+- **Development-Only**: Nur Development-Datenbank verwenden, NIEMALS Production
+- **Token-Sicherheit**: Personal Access Token niemals in Git committen
+- **Project-Scoped**: Zugriff nur auf spezifisches CARVITRA-Supabase-Projekt
+
+### MCP-Tools Integration
+
+**Verfügbare MCP-Funktionen über Claude Code**:
+- Direkte SQL-Abfragen auf PostgreSQL-Datenbank
+- Schema-Exploration und Tabellen-Analyse
+- Dateninspektion und -validation
+- Echtzeit-Synchronisation zwischen Code und Datenbank
+
+**Workflow-Integration**:
+- Vor Feature-Entwicklung: Schema-Check via MCP
+- Nach Migration/Schema-Änderung: Dokumentation-Update
+- Bei Code-Reviews: Datenmodell-Konsistenz prüfen
+
 ## Datenmodell (PostgreSQL)
 
 ### Übersicht
@@ -670,6 +747,42 @@ npx untitledui@latest add
 ```bash
 # Prettier mit automatischer Import-Sortierung
 npx prettier --write .
+```
+
+### Supabase MCP-Server Workflows
+
+**🚨 PFLICHT vor jeder DB-Development:**
+```bash
+# 1. Schema-Check über Claude Code (via MCP)
+# In Claude Code: "Zeige mir alle Tabellen in der Supabase-Datenbank"
+# In Claude Code: "Vergleiche das aktuelle Schema mit der CLAUDE.md Dokumentation"
+
+# 2. Bei Schema-Abweichungen: STOPPEN und Dokumentation updaten
+```
+
+**Häufige MCP-Datenbankabfragen:**
+```sql
+-- Alle Tabellen anzeigen
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public';
+
+-- Schema einer spezifischen Tabelle
+\d+ offers;
+
+-- Aktuelle Daten in Dictionary-Tabellen prüfen
+SELECT * FROM offer_type ORDER BY name;
+SELECT * FROM make ORDER BY name;
+```
+
+**MCP-Server Management:**
+```bash
+# Falls MCP-Verbindung unterbrochen:
+# 1. Claude Code komplett schließen
+# 2. Neu starten
+# 3. Zurück zum Projekt navigieren
+
+# Environment-Check:
+cat .env.local | grep SUPABASE_ACCESS_TOKEN
 ```
 
 ## Untitled UI Setup (Schritt 1 bereits ausgeführt)
