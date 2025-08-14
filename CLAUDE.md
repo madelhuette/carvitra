@@ -107,20 +107,49 @@ Das Datenmodell basiert auf einer PostgreSQL-Datenbank mit UUID-Primärschlüsse
 
 ### Haupttabellen
 
-#### dealer (Händler)
+#### organizations (Organisationen/Autohäuser)
 ```sql
 - id (UUID, Primary Key)
 - company_name (Text, NOT NULL)
 - street, street_number, postalcode, city, country (Text)
+- settings (JSONB) - Organisationsspezifische Einstellungen
 - created_at (Timestamp)
+- updated_at (Timestamp)
 ```
 
-#### sales_person (Verkäufer)
+#### users (Benutzer)
 ```sql
 - id (UUID, Primary Key)
-- dealer_id (UUID, Foreign Key → dealer)
+- organization_id (UUID, Foreign Key → organizations)
+- email (Text, UNIQUE, NOT NULL)
 - salutation, first_name, last_name (Text)
-- email, phone (Text)
+- phone (Text)
+- role (user_role_enum, DEFAULT 'salesperson')
+- invited_by (UUID, Foreign Key → users, NULL bei Erstregistrierung)
+- email_verified_at (Timestamp)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+```
+
+#### user_role_enum (Benutzerrollen)
+```sql
+CREATE TYPE user_role_enum AS ENUM (
+  'admin',       -- Geschäftsführung, Vollzugriff
+  'manager',     -- Verkaufsleitung, erweiterte Rechte
+  'salesperson'  -- Verkäufer, Standard-Rechte
+);
+```
+
+#### invitations (Einladungssystem)
+```sql
+- id (UUID, Primary Key)
+- organization_id (UUID, Foreign Key → organizations)
+- email (Text, NOT NULL)
+- role (user_role_enum, DEFAULT 'salesperson')
+- invited_by (UUID, Foreign Key → users)
+- token (Text, UNIQUE) - Einladungstoken
+- expires_at (Timestamp)
+- accepted_at (Timestamp, NULL bis Annahme)
 - created_at (Timestamp)
 ```
 
@@ -139,9 +168,12 @@ Das Datenmodell basiert auf einer PostgreSQL-Datenbank mit UUID-Primärschlüsse
 - doors (Integer)
 - power_ps (Integer)
 - availability_type_id (UUID, FK → availability_type)
-- dealer_id (UUID, FK → dealer)
-- sales_person_id (UUID, FK → sales_person)
+- organization_id (UUID, FK → organizations)
+- created_by (UUID, FK → users) - Ersteller des Angebots
+- assigned_to (UUID, FK → users, NULL) - Zugewiesener Verkäufer (optional)
+- is_active (Boolean, DEFAULT true) - Angebot aktiv/inaktiv
 - created_at (Timestamp)
+- updated_at (Timestamp)
 ```
 
 #### credit_offer (Finanzierungsangebote)
@@ -270,8 +302,12 @@ CREATE TABLE credit_institution (
     created_at     timestamptz NOT NULL DEFAULT now()
 );
 
-/* ---------- Händler & Ansprechpartner ---------- */
-CREATE TABLE dealer (
+/* ---------- Organisationen & Benutzer ---------- */
+
+-- Enum für Benutzerrollen
+CREATE TYPE user_role_enum AS ENUM ('admin', 'manager', 'salesperson');
+
+CREATE TABLE organizations (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     company_name   text NOT NULL,
     street         text,
@@ -279,18 +315,36 @@ CREATE TABLE dealer (
     postalcode     text,
     city           text,
     country        text,
-    created_at     timestamptz NOT NULL DEFAULT now()
+    settings       jsonb DEFAULT '{}',
+    created_at     timestamptz NOT NULL DEFAULT now(),
+    updated_at     timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE sales_person (
-    id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    dealer_id      uuid REFERENCES dealer(id) ON DELETE CASCADE,
-    salutation     text,
-    first_name     text,
-    last_name      text,
-    email          text,
-    phone          text,
-    created_at     timestamptz NOT NULL DEFAULT now()
+CREATE TABLE users (
+    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id     uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    email               text UNIQUE NOT NULL,
+    salutation          text,
+    first_name          text,
+    last_name           text,
+    phone               text,
+    role                user_role_enum DEFAULT 'salesperson',
+    invited_by          uuid REFERENCES users(id) ON DELETE SET NULL,
+    email_verified_at   timestamptz,
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    updated_at          timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE invitations (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    email           text NOT NULL,
+    role            user_role_enum DEFAULT 'salesperson',
+    invited_by      uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token           text UNIQUE NOT NULL,
+    expires_at      timestamptz NOT NULL,
+    accepted_at     timestamptz,
+    created_at      timestamptz NOT NULL DEFAULT now()
 );
 
 /* ---------- Haupttabelle: Fahrzeug- / Leasing-Angebot ---------- */
@@ -309,9 +363,12 @@ CREATE TABLE offer (
     doors                    int,
     power_ps                 int,
     availability_type_id     uuid REFERENCES availability_type(id),
-    dealer_id                uuid REFERENCES dealer(id),
-    sales_person_id          uuid REFERENCES sales_person(id),
-    created_at               timestamptz NOT NULL DEFAULT now()
+    organization_id          uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_by               uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_to              uuid REFERENCES users(id) ON DELETE SET NULL,
+    is_active                boolean DEFAULT true,
+    created_at               timestamptz NOT NULL DEFAULT now(),
+    updated_at               timestamptz NOT NULL DEFAULT now()
 );
 
 /* ---------- Many-to-Many: Angebot ↔ Ausstattung ---------- */
@@ -354,6 +411,47 @@ CREATE TABLE credit_offer (
 ```
 
 ## User Journey
+
+### Registrierung & Organisation (Neue Multi-Tenant-Struktur)
+
+#### Erstregistrierung (Organisation gründen)
+1. **Einheitliche Registrierung**:
+   - Keine Radiobutton-Auswahl zwischen Verkäufer/Händler
+   - Standardfelder: Vorname, Nachname, E-Mail, Passwort
+   - **Firmenname** als Kern der Organisation
+   - Automatische Validierung und Eindeutigkeit
+
+2. **Automatische Admin-Rolle**:
+   - Erster Benutzer wird automatisch **Organization Admin**
+   - Vollzugriff auf alle Funktionen der Organisation
+   - Berechtigung zur Benutzerverwaltung und Einladungen
+
+3. **Organisationseinrichtung**:
+   - Firmendaten vervollständigen (Adresse, etc.)
+   - Grundeinstellungen der Organisation
+   - Zugang zur Plattform erhalten
+
+#### Team-Erweiterung (Mitarbeiter einladen)
+1. **Einladungsprozess**:
+   - Admin kann E-Mail-Einladungen versenden
+   - Rollen-Zuweisung bei Einladung (Admin, Manager, Salesperson)
+   - Zeitlich begrenzte Einladungstoken
+
+2. **Registrierung über Einladung**:
+   - Eingeladene Person klickt auf Token-Link
+   - Vereinfachte Registrierung (Organisation bereits bekannt)
+   - Automatische Zuordnung zur bestehenden Organisation
+   - Role-basierte Berechtigungen werden sofort aktiv
+
+#### Rollen-System & Berechtigungen
+- **Admin**: Vollzugriff, Benutzerverwaltung, Organisationseinstellungen
+- **Manager**: Erweiterte Rechte, Team-Übersicht, Lead-Management
+- **Salesperson**: Standard-Benutzerrechte, eigene Angebote verwalten
+
+#### Migration bestehender Registrierungen
+- Automatische Konvertierung alter Dealer-Einträge zu Organisationen
+- Verkäufer werden als Benutzer mit entsprechender Rolle migriert
+- Bestehende Angebote bleiben über organization_id verknüpft
 
 ### Anlagestrecke (Multi-Step Form)
 1. **Upload**: PDF-Angebot hochladen
@@ -429,6 +527,75 @@ CREATE TABLE credit_offer (
   - Sichere Verwaltung
   - Transparente Abrechnung
   - Margin-Kalkulation bei Werbebuchungen
+
+## Migration zu organisationsbasierter Struktur
+
+### Datenmigration-Strategie
+
+#### Phase 1: Vorbereitung
+1. **Backup erstellen**: Vollständiges Backup der bestehenden Datenbank
+2. **Migration-Scripts schreiben**: SQL-Scripts für automatische Datenkonvertierung
+3. **Validation-Logic**: Prüfung der Datenintegrität vor und nach Migration
+
+#### Phase 2: Strukturelle Migration
+1. **Neue Tabellen erstellen**:
+   ```sql
+   -- Neue Tabellen parallel zu bestehenden erstellen
+   CREATE TABLE organizations_new (...);
+   CREATE TABLE users_new (...);
+   CREATE TABLE invitations (...);
+   ```
+
+2. **Datenkonvertierung**:
+   ```sql
+   -- Dealer zu Organizations
+   INSERT INTO organizations_new (id, company_name, street, ...)
+   SELECT id, company_name, street, ... FROM dealer;
+   
+   -- Sales_person zu Users (als Admin der Organisation)
+   INSERT INTO users_new (organization_id, email, role, ...)
+   SELECT dealer_id, email, 'admin', ... FROM sales_person;
+   ```
+
+3. **Offer-Tabelle aktualisieren**:
+   ```sql
+   -- Foreign Keys anpassen
+   ALTER TABLE offer ADD COLUMN organization_id uuid;
+   ALTER TABLE offer ADD COLUMN created_by uuid;
+   
+   -- Daten migrieren
+   UPDATE offer SET organization_id = dealer_id;
+   UPDATE offer SET created_by = sales_person_id;
+   ```
+
+#### Phase 3: Cleanup & Validierung
+1. **Datenintegrität prüfen**:
+   - Alle Offers haben gültigen organization_id
+   - Alle Users sind korrekt zugeordnet
+   - Keine verwaisten Datensätze
+
+2. **Alte Tabellen entfernen**:
+   ```sql
+   DROP TABLE sales_person;
+   DROP TABLE dealer;
+   
+   -- Neue Tabellen umbenennen
+   ALTER TABLE organizations_new RENAME TO organizations;
+   ALTER TABLE users_new RENAME TO users;
+   ```
+
+#### Rollback-Strategie
+1. **Rollback-Point**: Migration kann bis zum Cleanup rückgängig gemacht werden
+2. **Backup-Restore**: Vollständige Wiederherstellung aus Backup möglich
+3. **Validation-Checks**: Bei Fehlern automatischer Rollback
+
+#### Besonderheiten bei aktueller Entwicklungsphase
+**Status**: Aktuell nur Frontend-Implementierung ohne echte Backend-Integration
+- Migration ist derzeit theoretisch, da noch keine produktive Datenbank existiert
+- Bei Supabase-Setup kann direkt das neue Schema verwendet werden
+- Keine Legacy-Daten zu migrieren (Vorteil der frühen Entwicklungsphase)
+
+**Empfehlung**: Neues Schema direkt implementieren statt spätere Migration
 
 ## Entwicklungsumgebung & Stack
 
