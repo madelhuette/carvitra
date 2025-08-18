@@ -36,6 +36,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# mcp configuration (contains sensitive tokens)
+.mcp.json
+
 # vercel
 .vercel
 
