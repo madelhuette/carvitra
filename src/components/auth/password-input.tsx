@@ -55,7 +55,7 @@ export const PasswordInput = ({
                     type={showPassword ? "text" : "password"}
                     placeholder={placeholder}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={onChange}
                     error={error}
                     disabled={disabled}
                     autoComplete={autoComplete}

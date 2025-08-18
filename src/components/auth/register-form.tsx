@@ -1,30 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus01, AlertCircle, Building02, User01 } from "@untitledui/icons";
+import { UserPlus01, AlertCircle } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import { RadioGroup, RadioButton } from "@/components/base/radio-buttons/radio-buttons";
 import { SocialLogin } from "./social-login";
 import { PasswordInput } from "./password-input";
 import { validateEmail, validatePhone, validateRequired, validatePasswordMatch } from "@/utils/validation";
 import { validatePasswordStrength } from "@/utils/password";
-import { AUTH_ROUTES, DEFAULT_REGISTER_FORM, USER_TYPE_OPTIONS } from "@/constants/auth";
+import { AUTH_ROUTES, DEFAULT_REGISTER_FORM } from "@/constants/auth";
 import type { RegisterFormData, ValidationErrors } from "@/types/auth";
 
-interface RegisterFormProps {
-    onSubmit?: (data: RegisterFormData) => void;
-    isLoading?: boolean;
-    error?: string;
-}
+import { signup } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
-export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFormProps) => {
+export const RegisterForm = () => {
     const [formData, setFormData] = useState<RegisterFormData>(DEFAULT_REGISTER_FORM);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-
-    // USER_TYPE_OPTIONS direkt verwenden - Icons werden in RadioButton Labels integriert
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const router = useRouter();
 
 
     const validateForm = () => {
@@ -69,14 +66,28 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
         return Object.keys(errors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!validateForm()) {
             return;
         }
 
-        onSubmit?.(formData);
+        setIsLoading(true);
+        setError("");
+
+        try {
+            const result = await signup(formData);
+            
+            if (result?.error) {
+                setError(result.error);
+                setIsLoading(false);
+            }
+            // Bei Erfolg wird automatisch zur Success-Page weitergeleitet
+        } catch (err) {
+            setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+            setIsLoading(false);
+        }
     };
 
     const updateFormData = (field: keyof RegisterFormData, value: any) => {
@@ -109,35 +120,6 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
 
             {/* Registration Form */}
             <form className="space-y-6" onSubmit={handleSubmit}>
-                {/* User Type Selection */}
-                <div>
-                    <Label>Ich bin ein</Label>
-                    <div className="mt-2">
-                        <RadioGroup
-                            value={formData.userType}
-                            onChange={(value) => updateFormData("userType", value)}
-                            name="userType"
-                        >
-                            {USER_TYPE_OPTIONS.map(option => (
-                                <RadioButton
-                                    key={option.value}
-                                    value={option.value}
-                                    label={
-                                        <>
-                                            {option.value === "dealer" ? (
-                                                <Building02 className="size-4 inline-block align-middle mr-2" />
-                                            ) : (
-                                                <User01 className="size-4 inline-block align-middle mr-2" />
-                                            )}
-                                            {option.label}
-                                        </>
-                                    }
-                                />
-                            ))}
-                        </RadioGroup>
-                    </div>
-                </div>
-
                 {/* Personal Information */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -147,7 +129,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                             type="text"
                             placeholder="Max"
                             value={formData.firstName}
-                            onChange={(e) => updateFormData("firstName", e.target.value)}
+                            onChange={(value) => updateFormData("firstName", value)}
                             error={validationErrors.firstName}
                             disabled={isLoading}
                             className="mt-1"
@@ -160,7 +142,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                             type="text"
                             placeholder="Mustermann"
                             value={formData.lastName}
-                            onChange={(e) => updateFormData("lastName", e.target.value)}
+                            onChange={(value) => updateFormData("lastName", value)}
                             error={validationErrors.lastName}
                             disabled={isLoading}
                             className="mt-1"
@@ -175,7 +157,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                         type="email"
                         placeholder="max@autohaus-mustermann.de"
                         value={formData.email}
-                        onChange={(e) => updateFormData("email", e.target.value)}
+                        onChange={(value) => updateFormData("email", value)}
                         error={validationErrors.email}
                         disabled={isLoading}
                         className="mt-1"
@@ -184,15 +166,13 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
 
                 {/* Company Information */}
                 <div>
-                    <Label htmlFor="companyName">
-                        {formData.userType === "dealer" ? "Firmenname" : "Arbeitgeber"}
-                    </Label>
+                    <Label htmlFor="companyName">Firmenname</Label>
                     <Input
                         id="companyName"
                         type="text"
-                        placeholder={formData.userType === "dealer" ? "Autohaus Mustermann GmbH" : "Autohaus, in dem Sie arbeiten"}
+                        placeholder="Autohaus Mustermann GmbH"
                         value={formData.companyName}
-                        onChange={(e) => updateFormData("companyName", e.target.value)}
+                        onChange={(value) => updateFormData("companyName", value)}
                         error={validationErrors.companyName}
                         disabled={isLoading}
                         className="mt-1"
@@ -206,7 +186,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                         type="tel"
                         placeholder="+49 30 12345678"
                         value={formData.phone}
-                        onChange={(e) => updateFormData("phone", e.target.value)}
+                        onChange={(value) => updateFormData("phone", value)}
                         error={validationErrors.phone}
                         disabled={isLoading}
                         className="mt-1"
@@ -244,7 +224,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                         <Checkbox
                             id="terms"
                             checked={formData.acceptTerms}
-                            onChange={(checked) => updateFormData("acceptTerms", checked)}
+                            onChange={(checked: boolean) => updateFormData("acceptTerms", checked)}
                             disabled={isLoading}
                         />
                         <label htmlFor="terms" className="text-sm text-secondary leading-relaxed">
@@ -264,7 +244,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                         <Checkbox
                             id="privacy"
                             checked={formData.acceptPrivacy}
-                            onChange={(checked) => updateFormData("acceptPrivacy", checked)}
+                            onChange={(checked: boolean) => updateFormData("acceptPrivacy", checked)}
                             disabled={isLoading}
                         />
                         <label htmlFor="privacy" className="text-sm text-secondary leading-relaxed">
@@ -284,7 +264,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false, error }: RegisterFor
                         <Checkbox
                             id="marketing"
                             checked={formData.acceptMarketing}
-                            onChange={(checked) => updateFormData("acceptMarketing", checked)}
+                            onChange={(checked: boolean) => updateFormData("acceptMarketing", checked)}
                             disabled={isLoading}
                         />
                         <label htmlFor="marketing" className="text-sm text-secondary leading-relaxed">

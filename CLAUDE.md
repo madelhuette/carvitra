@@ -334,4 +334,27 @@ npx untitledui@latest add
 
 ---
 
+## 🔑 KRITISCHE LEARNINGS
+
+### Event Handler Kompatibilität
+**Problem**: TypeError bei Form-Inputs durch falsche Event-Handler  
+**Lösung**: Untitled UI übergibt Werte direkt, nicht Events
+```tsx
+// ✅ RICHTIG
+<Input onChange={(value: string) => setState(value)} />
+<Checkbox onChange={(checked: boolean) => setState(checked)} />
+
+// ❌ FALSCH  
+<Input onChange={(e) => setState(e.target.value)} />
+```
+
+### Supabase Test-Domains
+**Problem**: "Email address invalid" bei test@example.com  
+**Lösung**: Realistische Domains verwenden (z.B. @autohaus-test.de)
+
+### MCP-Server Management
+**Wichtig**: Nach .mcp.json Änderungen Claude Code Neustart erforderlich
+
+---
+
 *Letzte Aktualisierung: Januar 2025*

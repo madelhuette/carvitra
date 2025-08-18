@@ -20,7 +20,6 @@ export interface LoginFormData {
 }
 
 export interface RegisterFormData {
-    userType: "dealer" | "salesperson";
     firstName: string;
     lastName: string;
     email: string;
@@ -31,6 +30,7 @@ export interface RegisterFormData {
     acceptTerms: boolean;
     acceptPrivacy: boolean;
     acceptMarketing: boolean;
+    userType?: "dealer" | "salesperson"; // Optional for compatibility
 }
 
 export interface ForgotPasswordFormData {

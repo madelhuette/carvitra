@@ -24,18 +24,19 @@ export default function SuccessPage() {
     }, [searchParams]);
 
     const handleResendEmail = async () => {
+        if (!email) return;
+        
         setIsResendLoading(true);
         
         try {
-            // Hier wird später die Supabase Auth Integration implementiert
-            console.log("Resending confirmation email to:", email);
+            const { resendConfirmationEmail } = await import("@/app/actions/auth");
+            const result = await resendConfirmationEmail(email);
             
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Show success message (temporary)
-            alert("Bestätigungs-E-Mail wurde erneut gesendet!");
-            
+            if (result?.error) {
+                alert(result.error);
+            } else {
+                alert("Bestätigungs-E-Mail wurde erneut gesendet!");
+            }
         } catch (err) {
             console.error("Resend email error:", err);
             alert("E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.");
@@ -45,8 +46,8 @@ export default function SuccessPage() {
     };
 
     const handleContinue = () => {
-        // Later: Navigate to dashboard or app
-        console.log("Continue to dashboard");
+        // Navigate to dashboard after verification
+        window.location.href = "/dashboard";
     };
 
     const getLayoutProps = () => {

@@ -25,7 +25,6 @@ export const MIN_PASSWORD_STRENGTH = 3;
 
 // Form Default Values
 export const DEFAULT_REGISTER_FORM = {
-    userType: "dealer" as const,
     firstName: "",
     lastName: "",
     email: "",
@@ -37,20 +36,6 @@ export const DEFAULT_REGISTER_FORM = {
     acceptPrivacy: false,
     acceptMarketing: false,
 };
-
-// User Type Options für Registrierung
-export const USER_TYPE_OPTIONS = [
-    {
-        value: "dealer",
-        label: "Händler",
-        description: "Ich bin ein Autohändler/Autohaus",
-    },
-    {
-        value: "salesperson",
-        label: "Verkäufer", 
-        description: "Ich bin ein Verkäufer in einem Autohaus",
-    },
-] as const;
 
 // Auth Routes
 export const AUTH_ROUTES = {

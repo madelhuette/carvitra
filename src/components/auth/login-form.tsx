@@ -11,20 +11,17 @@ import { PasswordInput } from "./password-input";
 import { validateEmail, validatePassword } from "@/utils/validation";
 import { AUTH_ROUTES } from "@/constants/auth";
 import type { LoginFormData, ValidationErrors } from "@/types/auth";
+import { login } from "@/app/actions/auth";
 
-interface LoginFormProps {
-    onSubmit?: (data: LoginFormData) => void;
-    isLoading?: boolean;
-    error?: string;
-}
-
-export const LoginForm = ({ onSubmit, isLoading = false, error }: LoginFormProps) => {
+export const LoginForm = () => {
     const [formData, setFormData] = useState<LoginFormData>({
         email: "",
         password: "",
         rememberMe: false,
     });
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const validateForm = () => {
         const errors: ValidationErrors = {};
@@ -39,14 +36,28 @@ export const LoginForm = ({ onSubmit, isLoading = false, error }: LoginFormProps
         return Object.keys(errors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!validateForm()) {
             return;
         }
 
-        onSubmit?.(formData);
+        setIsLoading(true);
+        setError("");
+
+        try {
+            const result = await login(formData);
+            
+            if (result?.error) {
+                setError(result.error);
+                setIsLoading(false);
+            }
+            // Bei Erfolg wird automatisch zum Dashboard weitergeleitet
+        } catch (err) {
+            setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -81,7 +92,7 @@ export const LoginForm = ({ onSubmit, isLoading = false, error }: LoginFormProps
                         type="email"
                         placeholder="name@firma.de"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(value) => setFormData({ ...formData, email: value })}
                         error={validationErrors.email}
                         disabled={isLoading}
                         className="mt-1"
@@ -103,12 +114,11 @@ export const LoginForm = ({ onSubmit, isLoading = false, error }: LoginFormProps
                 <div className="flex items-center justify-between">
                     <Checkbox
                         id="remember-me"
+                        label="Angemeldet bleiben"
                         checked={formData.rememberMe}
                         onChange={(checked) => setFormData({ ...formData, rememberMe: checked })}
                         disabled={isLoading}
-                    >
-                        Angemeldet bleiben
-                    </Checkbox>
+                    />
                     
                     <a 
                         href={AUTH_ROUTES.FORGOT_PASSWORD}
