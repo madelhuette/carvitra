@@ -102,7 +102,7 @@ export const SuccessMessage = ({
 
             {/* Next Steps */}
             {content.tips.length > 0 && (
-                <div className="rounded-lg bg-gray-50 p-6">
+                <div className="rounded-lg bg-secondary p-6">
                     <div className="flex items-center gap-2 mb-4">
                         <Lightbulb04 className="size-5 text-brand-600" />
                         <h3 className="text-lg font-semibold text-primary">
@@ -112,7 +112,7 @@ export const SuccessMessage = ({
                     <ul className="space-y-2">
                         {content.tips.map((tip, index) => (
                             <li key={index} className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-6 h-6 bg-brand-100 rounded-full flex items-center justify-center mt-0.5">
+                                <div className="flex-shrink-0 w-6 h-6 bg-brand-primary rounded-full flex items-center justify-center mt-0.5">
                                     <span className="text-xs font-medium text-brand-700">
                                         {index + 1}
                                     </span>
@@ -183,7 +183,7 @@ export const SuccessMessage = ({
             </div>
 
             {/* Support Link */}
-            <div className="text-center border-t border-secondary pt-6">
+            <div className="text-center border-t border-border pt-6">
                 <p className="text-sm text-secondary">
                     Haben Sie Fragen oder benötigen Hilfe?{" "}
                     <a 

@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { 
-  LayoutGrid, 
-  FileText02, 
+  LayoutGrid01, 
+  File02, 
   Users03, 
   Settings01, 
   HelpCircle,
   LogOut01,
-  Menu,
+  Menu01,
   X,
-  User01
+  User01,
+  Moon01,
+  Sun
 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { logout } from "@/app/actions/auth";
@@ -29,7 +32,13 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -37,8 +46,8 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
   };
 
   const navigation = [
-    { name: 'Übersicht', href: '/dashboard', icon: LayoutGrid, current: true },
-    { name: 'Angebote', href: '/dashboard/offers', icon: FileText02, current: false },
+    { name: 'Übersicht', href: '/dashboard', icon: LayoutGrid01, current: true },
+    { name: 'Angebote', href: '/dashboard/offers', icon: File02, current: false },
     { name: 'Leads', href: '/dashboard/leads', icon: Users03, current: false },
     { name: 'Einstellungen', href: '/dashboard/settings', icon: Settings01, current: false },
   ];
@@ -125,7 +134,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
             className="lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
           >
-            <Menu className="size-5" />
+            <Menu01 className="size-5" />
           </Button>
           
           <div className="flex-1 px-4 lg:px-0">
@@ -135,6 +144,17 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-3">
+            {mounted && (
+              <Button
+                color="tertiary"
+                size="md"
+                iconOnly
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                aria-label="Theme wechseln"
+              >
+                {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+              </Button>
+            )}
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600">

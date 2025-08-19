@@ -72,12 +72,27 @@ import { FaUser } from "react-icons/fa";
 
 ### **4. Theme System**
 ```typescript
-// ✅ CORRECT - Semantic colors
+// ✅ CORRECT - Semantic colors that adapt to theme
 <div className="bg-primary text-secondary">
+<div className="bg-secondary border-border">
+<div className="bg-brand-primary text-brand-700">
 
-// ❌ WRONG - Hardcoded colors
+// ❌ WRONG - Hardcoded colors that don't adapt
+<div className="bg-gray-50 text-blue-600">
+<div className="bg-gray-100 border-gray-200">
 <div style={{ backgroundColor: "#000" }}>
 ```
+
+⚠️ **KRITISCH**: NIEMALS hartcodierte Farben verwenden wie:
+- `bg-gray-50`, `bg-gray-100`, `text-gray-600` etc.
+- `bg-blue-500`, `text-red-600`, `border-green-400` etc.
+- Inline styles mit Hex/RGB Werten
+
+✅ **IMMER semantische Klassen verwenden**:
+- `bg-primary`, `bg-secondary`, `bg-tertiary`
+- `text-primary`, `text-secondary`, `text-tertiary`
+- `border-border`, `border-primary`, `border-secondary`
+- `bg-brand-primary`, `text-brand-600`, etc.
 
 ### **5. Component Structure**
 - No duplicate/fork of Untitled UI components
@@ -138,7 +153,11 @@ src/components/
 ### **Forbidden Practices**
 - ❌ Creating custom UI components from scratch
 - ❌ Using non-Untitled UI component libraries
-- ❌ Hardcoding colors or dimensions
+- ❌ **HARDCODING COLORS** (z.B. `bg-gray-50`, `text-blue-600`)
+  - Verwende IMMER semantische Klassen (`bg-primary`, `text-secondary`)
+  - ALLE Farben müssen auf Theme-Wechsel reagieren
+  - KEINE direkten Tailwind-Farben ohne semantische Bedeutung
+- ❌ Hardcoding dimensions (außer wenn wirklich notwendig)
 - ❌ Modifying base Untitled UI components
 - ❌ Using custom SVG icons
 - ❌ Inline styles (except for dynamic values)
@@ -276,6 +295,10 @@ const CustomInput = ({ onChange, ...props }) => {
 - ⚠️ Inkonsistente onChange Handler zwischen Wrapper und Base-Komponenten
 - ⚠️ Fehlende TypeScript-Typen für Event Handler
 - ⚠️ Mischung von kontrollierten und unkontrollierten Komponenten
+- 🚨 **HARTCODIERTE FARBEN** (z.B. `bg-gray-50`, `text-blue-600`)
+  - Prüfe ALLE className Attribute auf nicht-semantische Farben
+  - Stelle sicher, dass nur Theme-kompatible Klassen verwendet werden
+  - Identifiziere und melde ALLE hartcodierten Farbwerte
 
 ---
 
@@ -329,6 +352,7 @@ Wenn der Agent während seiner Prüfung **neue Pattern, Fehler oder Best Practic
 - **2025-01-18**: Enhanced with specific code examples and patterns
 - **2025-01-18**: Added Component Integration Patterns section for Event Handler compatibility
 - **2025-01-18**: Added Self-Learning mechanism for automatic documentation updates
+- **2025-01-18**: **KRITISCH**: Verschärfte Regeln gegen hartcodierte Farben - ALLE Farben müssen semantisch und Theme-kompatibel sein
 
 ---
 
