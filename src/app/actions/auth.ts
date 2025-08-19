@@ -42,20 +42,52 @@ export async function signup(formData: RegisterFormData) {
 export async function login(formData: LoginFormData) {
   const supabase = await createClient()
 
+  console.log('Login attempt for:', formData.email)
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email: formData.email,
     password: formData.password,
   })
 
   if (error) {
+    console.error('Login error details:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      details: error
+    })
+
     if (error.message?.includes('Invalid login credentials')) {
       return { error: 'Ungültige E-Mail-Adresse oder Passwort.' }
     }
     if (error.message?.includes('Email not confirmed')) {
       return { error: 'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse.' }
     }
-    console.error('Login error:', error)
-    return { error: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.' }
+    if (error.message?.includes('Database error')) {
+      // Spezifischer Fehler für Datenbankprobleme
+      return { error: 'Datenbankfehler. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support.' }
+    }
+    return { error: `Anmeldung fehlgeschlagen: ${error.message}` }
+  }
+
+  if (!data.user) {
+    console.error('Login succeeded but no user data returned')
+    return { error: 'Anmeldung fehlgeschlagen. Keine Benutzerdaten erhalten.' }
+  }
+
+  console.log('Login successful for user:', data.user.id)
+
+  // Verifiziere, dass der User ein Profil hat
+  const { data: profile, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('*, organizations(*)')
+    .eq('user_id', data.user.id)
+    .single()
+
+  if (profileError || !profile) {
+    console.error('Profile fetch error:', profileError)
+    // Profil fehlt, aber User ist authentifiziert - leite trotzdem weiter
+    console.warn('User logged in but profile not found, redirecting anyway')
   }
 
   revalidatePath('/', 'layout')

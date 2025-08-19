@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ChevronDown, Moon01, Sun, Menu01, X } from "@untitledui/icons";
 import { useTheme } from "next-themes";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Popover as AriaPopover } from "react-aria-components";
@@ -98,6 +98,11 @@ interface HeaderProps {
 export const Header = ({ items = headerNavItems, isFullWidth, isFloating, className }: HeaderProps) => {
     const headerRef = useRef<HTMLElement>(null);
     const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <header
@@ -184,7 +189,11 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                             aria-label="Toggle theme"
                         >
-                            {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+                            {mounted ? (
+                                theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />
+                            ) : (
+                                <div className="size-5" />
+                            )}
                         </Button>
                         <Button color="secondary" size={isFloating ? "md" : "lg"} href="/auth/login">
                             Anmelden
@@ -203,7 +212,11 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                             aria-label="Toggle theme"
                         >
-                            {theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+                            {mounted ? (
+                                theme === 'dark' ? <Sun className="size-5" /> : <Moon01 className="size-5" />
+                            ) : (
+                                <div className="size-5" />
+                            )}
                         </Button>
 
                     {/* Mobile menu trigger */}
