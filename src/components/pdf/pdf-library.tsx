@@ -7,7 +7,8 @@ import { Badge } from '@/components/base/badges/badges'
 import { EmptyState } from '@/components/application/empty-state/empty-state'
 import { LoadingIndicator } from '@/components/application/loading-indicator/loading-indicator'
 import { Modal } from '@/components/application/modals/modal'
-import { FileUpload } from '@/components/application/file-upload/file-upload-base'
+import { FileUploadDropZone } from '@/components/application/file-upload/file-upload-base'
+import { FileTrigger } from '@/components/base/file-upload-trigger/file-upload-trigger'
 import { Upload01, File02, CheckCircle, AlertCircle, Clock, Plus, Eye, Trash02, Download01 } from '@untitledui/icons'
 import { PdfDocument } from '@/types/pdf.types'
 import { formatDistanceToNow } from 'date-fns'
@@ -158,15 +159,24 @@ export function PdfLibrary() {
             </div>
           }
         >
-          <FileUpload
-            accept=".pdf"
-            maxSize={10 * 1024 * 1024}
-            onFileSelect={handleFileSelect}
-            icon={File02}
-            title="PDF-Datei auswählen"
-            description="oder per Drag & Drop hierher ziehen"
-            supportText="PDF bis zu 10MB"
-          />
+          <div className="p-4">
+            <FileTrigger
+              accept=".pdf"
+              onChange={(e) => {
+                const files = e.target.files
+                if (files && files.length > 0) {
+                  handleFileSelect(Array.from(files))
+                }
+              }}
+            >
+              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer">
+                <Upload01 className="h-10 w-10 text-gray-400 mb-3" />
+                <p className="text-sm font-medium text-gray-900">PDF-Datei auswählen</p>
+                <p className="text-xs text-gray-500 mt-1">oder per Drag & Drop hierher ziehen</p>
+                <p className="text-xs text-gray-400 mt-2">PDF bis zu 10MB</p>
+              </div>
+            </FileTrigger>
+          </div>
           
           {selectedFile && (
             <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -311,15 +321,24 @@ export function PdfLibrary() {
           </div>
         }
       >
-        <FileUploadBase
-          accept=".pdf"
-          maxSize={10 * 1024 * 1024}
-          onFileSelect={handleFileSelect}
-          icon={File02}
-          title="PDF-Datei auswählen"
-          description="oder per Drag & Drop hierher ziehen"
-          supportText="PDF bis zu 10MB"
-        />
+        <div className="p-4">
+          <FileTrigger
+            accept=".pdf"
+            onChange={(e) => {
+              const files = e.target.files
+              if (files && files.length > 0) {
+                handleFileSelect(Array.from(files))
+              }
+            }}
+          >
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer">
+              <Upload01 className="h-10 w-10 text-gray-400 mb-3" />
+              <p className="text-sm font-medium text-gray-900">PDF-Datei auswählen</p>
+              <p className="text-xs text-gray-500 mt-1">oder per Drag & Drop hierher ziehen</p>
+              <p className="text-xs text-gray-400 mt-2">PDF bis zu 10MB</p>
+            </div>
+          </FileTrigger>
+        </div>
         
         {selectedFile && (
           <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
