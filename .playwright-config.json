@@ -1,0 +1,25 @@
+{
+  "baseURL": "http://localhost:3000",
+  "reuseExistingBrowser": true,
+  "headless": false,
+  "maxTabs": 3,
+  "browserSettings": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "defaultTimeout": 30000,
+    "navigationTimeout": 30000
+  },
+  "serverCheck": {
+    "enabled": true,
+    "retries": 3,
+    "retryDelay": 2000,
+    "healthEndpoint": "/"
+  },
+  "cleanup": {
+    "closeTabsOnError": true,
+    "maxIdleTime": 300000,
+    "autoCloseEmptyTabs": true
+  }
+}

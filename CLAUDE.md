@@ -209,9 +209,17 @@ npx untitledui@latest add
 ```
 
 ### 🔧 Entwicklungsbefehle
+
+#### Server-Management (NEU! Jan 2025)
 ```bash
-# Development (mit Turbopack)
-npm run dev
+# Smart Dev Server (verhindert Mehrfach-Instanzen)
+npm run dev           # Startet oder nutzt bestehenden Server
+npm run dev:status    # Zeigt Server-Status und Port-Nutzung
+npm run dev:clean     # Räumt ALLE Prozesse auf und startet neu
+npm run dev:force     # Erzwingt neuen Server (beendet alten)
+
+# Legacy/Direct
+npm run dev:direct    # Original Next.js dev (ohne Management)
 
 # Production
 npm run build && npm run start
@@ -219,6 +227,13 @@ npm run build && npm run start
 # Code-Formatierung
 npx prettier --write .
 ```
+
+**🚨 WICHTIG: Server-Management Best Practices**
+- **IMMER** `npm run dev` statt `npm run dev:direct` nutzen
+- Bei Problemen: `npm run dev:status` für Diagnose
+- Bei vielen Prozessen: `npm run dev:clean` zum Aufräumen
+- Lock-File `.server-lock.json` zeigt aktiven Server
+- Playwright nutzt automatisch Port 3000 (siehe `.playwright-config.json`)
 
 ---
 

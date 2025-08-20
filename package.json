@@ -3,7 +3,11 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack",
+        "dev": "node scripts/dev-server.js",
+        "dev:force": "node scripts/dev-server.js --force",
+        "dev:clean": "pkill -f 'next dev' || true && pkill -f 'npm run' || true && rm -f .server-lock.json && node scripts/dev-server.js",
+        "dev:status": "node scripts/server-status.js",
+        "dev:direct": "next dev --turbopack",
         "build": "next build",
         "start": "next start"
     },
