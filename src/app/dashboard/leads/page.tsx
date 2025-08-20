@@ -1,0 +1,83 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
+import { EmptyState } from '@/components/application/empty-state/empty-state'
+import { Users03, Download01, FilterLines } from '@untitledui/icons'
+import { Button } from '@/components/base/buttons/button'
+
+export default async function LeadsPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/signin')
+  }
+
+  // Get user profile data
+  const { data: profile } = await supabase
+    .from('users')
+    .select('first_name, last_name, organization:organizations(name)')
+    .eq('id', user.id)
+    .single()
+
+  const userData = {
+    email: user.email || '',
+    firstName: profile?.first_name || '',
+    lastName: profile?.last_name || '',
+    companyName: profile?.organization?.name || 'Unbekannte Organisation'
+  }
+
+  return (
+    <DashboardLayout user={userData}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Lead-Verwaltung</h1>
+            <p className="mt-1 text-secondary">
+              Verwalten Sie alle Anfragen und Interessenten aus Ihren Landingpages.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              size="md"
+              variant="secondary"
+              iconLeading={FilterLines}
+              disabled
+            >
+              Filtern
+            </Button>
+            <Button
+              size="md"
+              variant="secondary"
+              iconLeading={Download01}
+              disabled
+            >
+              Exportieren
+            </Button>
+          </div>
+        </div>
+        
+        <EmptyState size="lg">
+          <EmptyState.FeaturedIcon icon={Users03} />
+          <EmptyState.Content>
+            <EmptyState.Title>Noch keine Leads</EmptyState.Title>
+            <EmptyState.Description>
+              Sobald Interessenten über Ihre Landingpages Anfragen stellen, erscheinen diese hier.
+            </EmptyState.Description>
+          </EmptyState.Content>
+          <EmptyState.Footer>
+            <Button
+              size="lg"
+              onClick={() => window.location.href = '/dashboard/landingpages'}
+            >
+              Landingpages verwalten
+            </Button>
+          </EmptyState.Footer>
+        </EmptyState>
+      </div>
+    </DashboardLayout>
+  )
+}

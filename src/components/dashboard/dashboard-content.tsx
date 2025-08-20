@@ -1,19 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { 
   TrendUp02, 
   Users03, 
   File02, 
   CurrencyEuroCircle,
   ArrowRight,
-  Home01,
-  FileSearch01,
-  Link03,
   Upload01
 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
-import { PdfLibrary } from "@/components/pdf/pdf-library";
+import { useRouter } from "next/navigation";
 
 interface DashboardContentProps {
   user: {
@@ -24,10 +20,8 @@ interface DashboardContentProps {
   };
 }
 
-type TabType = 'overview' | 'pdf-library' | 'offers' | 'landingpages';
-
 export const DashboardContent = ({ user }: DashboardContentProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const router = useRouter();
   
   const stats = [
     { name: 'Aktive Angebote', value: '0', icon: File02, change: '+0%', changeType: 'positive' },
@@ -36,24 +30,17 @@ export const DashboardContent = ({ user }: DashboardContentProps) => {
     { name: 'Umsatz diesen Monat', value: '€0', icon: CurrencyEuroCircle, change: '+0%', changeType: 'neutral' },
   ];
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'pdf-library':
-        return <PdfLibrary />;
-      
-      case 'overview':
-      default:
-        return (
-          <>
-            {/* Welcome Section */}
-            <div>
-              <h2 className="text-2xl font-bold text-primary">Dashboard</h2>
-              <p className="mt-1 text-secondary">
-                Verwalten Sie Ihre Fahrzeugangebote und Leads an einem Ort.
-              </p>
-            </div>
+  return (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div>
+        <h2 className="text-2xl font-bold text-primary">Dashboard</h2>
+        <p className="mt-1 text-secondary">
+          Verwalten Sie Ihre Fahrzeugangebote und Leads an einem Ort.
+        </p>
+      </div>
 
-            {/* Stats Grid */}
+      {/* Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {stats.map((stat) => (
                 <div key={stat.name} className="rounded-lg border border-secondary bg-primary p-6">
@@ -90,7 +77,7 @@ export const DashboardContent = ({ user }: DashboardContentProps) => {
                     size="sm" 
                     className="mt-4"
                     iconTrailing={Upload01}
-                    onClick={() => setActiveTab('pdf-library')}
+                    onClick={() => router.push('/dashboard/offers')}
                   >
                     PDF hochladen
                   </Button>
@@ -106,6 +93,7 @@ export const DashboardContent = ({ user }: DashboardContentProps) => {
                     variant="secondary"
                     className="mt-4"
                     iconTrailing={ArrowRight}
+                    onClick={() => router.push('/dashboard/offers')}
                   >
                     Angebot erstellen
                   </Button>
@@ -121,6 +109,7 @@ export const DashboardContent = ({ user }: DashboardContentProps) => {
                     variant="secondary"
                     className="mt-4"
                     iconTrailing={ArrowRight}
+                    onClick={() => router.push('/dashboard/leads')}
                   >
                     Zu den Leads
                   </Button>
@@ -141,53 +130,6 @@ export const DashboardContent = ({ user }: DashboardContentProps) => {
                 </div>
               </div>
             </div>
-          </>
-        );
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Tab Navigation */}
-      <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-        <Button
-          size="sm"
-          variant={activeTab === 'overview' ? 'primary' : 'ghost'}
-          iconLeading={Home01}
-          onClick={() => setActiveTab('overview')}
-        >
-          Übersicht
-        </Button>
-        <Button
-          size="sm"
-          variant={activeTab === 'pdf-library' ? 'primary' : 'ghost'}
-          iconLeading={File02}
-          onClick={() => setActiveTab('pdf-library')}
-        >
-          PDF-Bibliothek
-        </Button>
-        <Button
-          size="sm"
-          variant={activeTab === 'offers' ? 'primary' : 'ghost'}
-          iconLeading={FileSearch01}
-          onClick={() => setActiveTab('offers')}
-          disabled
-        >
-          Angebote
-        </Button>
-        <Button
-          size="sm"
-          variant={activeTab === 'landingpages' ? 'primary' : 'ghost'}
-          iconLeading={Link03}
-          onClick={() => setActiveTab('landingpages')}
-          disabled
-        >
-          Landingpages
-        </Button>
-      </div>
-
-      {/* Content Area */}
-      {renderContent()}
     </div>
   );
 };

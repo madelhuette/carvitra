@@ -14,7 +14,8 @@ import {
   X,
   User01,
   Moon01,
-  Sun
+  Sun,
+  Link03
 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { logout } from "@/app/actions/auth";
@@ -47,7 +48,8 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
 
   const navigation = [
     { name: 'Übersicht', href: '/dashboard', icon: LayoutGrid01, current: true },
-    { name: 'Angebote', href: '/dashboard/offers', icon: File02, current: false },
+    { name: 'Angebotsverwaltung', href: '/dashboard/offers', icon: File02, current: false },
+    { name: 'Landingpages', href: '/dashboard/landingpages', icon: Link03, current: false },
     { name: 'Leads', href: '/dashboard/leads', icon: Users03, current: false },
     { name: 'Einstellungen', href: '/dashboard/settings', icon: Settings01, current: false },
   ];
@@ -157,7 +159,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
             )}
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand">
                   <User01 className="size-4 text-white" />
                 </div>
                 <div className="text-sm">

@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create database record mit RLS-geschütztem Client
+    // Status direkt auf 'extracting' setzen, da KI-Analyse automatisch startet
     const { data: pdfDocument, error: dbError } = await supabase
       .from('pdf_documents')
       .insert({
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
         file_url: signedUrl,
         file_name: file.name,
         file_size_bytes: file.size,
-        processing_status: 'uploaded'
+        processing_status: 'extracting' // Direkt auf extracting, da KI-Analyse automatisch startet
       })
       .select()
       .single()
@@ -124,32 +125,89 @@ export async function POST(request: NextRequest) {
     }
     
     // Audit Log Entry (optional, aber empfohlen)
-    await supabase
-      .from('storage_audit_log')
-      .insert({
-        user_id: user.id,
-        organization_id: profile.organization_id,
-        bucket_id: 'pdf-documents',
-        file_path: filePath,
-        action: 'upload',
-        file_size_bytes: file.size,
-        user_agent: request.headers.get('user-agent')
-      })
-      .select()
-      .single()
-      .catch(err => console.log('Audit log error (non-critical):', err))
+    try {
+      await supabase
+        .from('storage_audit_log')
+        .insert({
+          user_id: user.id,
+          organization_id: profile.organization_id,
+          bucket_id: 'pdf-documents',
+          file_path: filePath,
+          action: 'upload',
+          file_size_bytes: file.size,
+          user_agent: request.headers.get('user-agent')
+        })
+        .select()
+        .single()
+    } catch (auditError) {
+      console.log('Audit log error (non-critical):', auditError)
+    }
     
     // Trigger extraction process (async)
-    // Use absolute URL or relative path
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`
+    // WICHTIG: Authorization und Cookie-Header korrekt weitergeben
+    const extractionHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+    }
+    
+    // Authorization-Header weitergeben (falls vorhanden)
+    const authHeader = request.headers.get('Authorization')
+    if (authHeader) {
+      extractionHeaders['Authorization'] = authHeader
+    }
+    
+    // Cookie-Header für Session-Auth weitergeben
+    const cookieHeader = request.headers.get('Cookie')
+    if (cookieHeader) {
+      extractionHeaders['Cookie'] = cookieHeader
+    }
+    
+    // Use absolute URL for extraction - detect correct port
+    const host = request.headers.get('host') || 'localhost:3001'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
+    
+    console.log('[PDF Upload] Triggering extraction for document:', pdfDocument.id)
+    console.log('[PDF Upload] Using base URL:', baseUrl)
+    console.log('[PDF Upload] Auth present:', !!authHeader || !!cookieHeader)
+    
+    // Async extraction trigger mit besserer Fehlerbehandlung und höherem Timeout
     fetch(`${baseUrl}/api/pdf/extract`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': request.headers.get('Authorization') || ''
-      },
-      body: JSON.stringify({ pdf_document_id: pdfDocument.id })
-    }).catch(err => console.error('Failed to trigger extraction:', err))
+      headers: extractionHeaders,
+      body: JSON.stringify({ pdf_document_id: pdfDocument.id }),
+      signal: AbortSignal.timeout(120000) // 120 Sekunden Timeout
+    })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('[PDF Upload] Extraction trigger failed:', res.status, errorText)
+        
+        // Update status zu failed bei Fehler
+        await supabase
+          .from('pdf_documents')
+          .update({ 
+            processing_status: 'failed',
+            processing_error: `Extraction trigger failed: ${res.status}`
+          })
+          .eq('id', pdfDocument.id)
+      } else {
+        console.log('[PDF Upload] Extraction triggered successfully')
+      }
+    })
+    .catch(err => {
+      console.error('[PDF Upload] Failed to trigger extraction:', err)
+      
+      // Update status zu failed bei Netzwerkfehler
+      supabase
+        .from('pdf_documents')
+        .update({ 
+          processing_status: 'failed',
+          processing_error: `Network error: ${err.message}`
+        })
+        .eq('id', pdfDocument.id)
+        .then(() => console.log('[PDF Upload] Status updated to failed'))
+        .catch(updateErr => console.error('[PDF Upload] Failed to update status:', updateErr))
+    })
     
     return NextResponse.json({
       success: true,

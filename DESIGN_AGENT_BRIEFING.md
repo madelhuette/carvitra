@@ -60,7 +60,31 @@ import { UserPlus01, AlertCircle } from "@untitledui/icons";
 import { FaUser } from "react-icons/fa";
 ```
 
-### **3. Button Icon Positioning**
+### **3. Button Implementation**
+
+#### **Props Usage**
+```typescript
+// ✅ CORRECT - Using 'color' prop
+<Button color="primary">Primary Button</Button>
+<Button color="secondary">Secondary Button</Button>
+<Button color="tertiary">Tertiary Button</Button>
+
+// ❌ WRONG - Using 'variant' prop (existiert nicht!)
+<Button variant="secondary">Button</Button>
+```
+
+#### **Icon-Only Buttons**
+```typescript
+// ✅ CORRECT - Icon als iconLeading, kein children
+<Button color="secondary" iconLeading={Eye} />
+<Button color="secondary" iconLeading={Trash02} />
+
+// ❌ WRONG - Icon als children mit 'iconOnly' prop
+<Button variant="secondary" iconOnly><Eye /></Button>
+<Button iconOnly={true}><Trash02 /></Button>
+```
+
+#### **Icon Positioning mit Text**
 ```typescript
 // ✅ CORRECT - Icons as props
 <Button iconLeading={UserPlus01}>Anmelden</Button>
@@ -68,6 +92,14 @@ import { FaUser } from "react-icons/fa";
 
 // ❌ WRONG - Icons as children
 <Button><UserPlus01 />Anmelden</Button>
+```
+
+#### **Invalid Props to Avoid**
+```typescript
+// ❌ Diese Props existieren NICHT in Untitled UI Button:
+- variant (use 'color' instead)
+- iconOnly (use iconLeading/iconTrailing without children)
+- destructive (use color="primary-destructive" or "secondary-destructive")
 ```
 
 ### **4. Theme System**
@@ -353,6 +385,7 @@ Wenn der Agent während seiner Prüfung **neue Pattern, Fehler oder Best Practic
 - **2025-01-18**: Added Component Integration Patterns section for Event Handler compatibility
 - **2025-01-18**: Added Self-Learning mechanism for automatic documentation updates
 - **2025-01-18**: **KRITISCH**: Verschärfte Regeln gegen hartcodierte Farben - ALLE Farben müssen semantisch und Theme-kompatibel sein
+- **2025-01-20**: **WICHTIG**: Erweiterte Button Implementation Guidelines - korrekter Einsatz von 'color' statt 'variant', Icon-Only Buttons mit iconLeading, keine ungültigen Props
 
 ---
 
