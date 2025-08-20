@@ -109,33 +109,48 @@ CARVITRA ermöglicht Autohändlern und Verkäufern die **einfache Erstellung pro
 ### 📊 Struktur-Übersicht
 - **UUID-basiert**: Alle Primärschlüssel als UUID
 - **Multi-Tenant**: Organisationsbasierte Datentrennung
-- **Dictionary Tables**: Wiederverwendbare Stammdaten
+- **Dictionary Tables**: Wiederverwendbare Stammdaten (11 Lookup-Tabellen)
 - **Referential Integrity**: Vollständige FK-Constraints
+- **30+ Tabellen**: Vollständig implementiert mit RLS-Policies
 
 ### 🏢 Hauptentitäten
 
 #### Organizations & Users
 ```sql
-organizations  # Autohäuser/Händler
+organizations      # Autohäuser/Händler
 ├── users         # Verkäufer/Admins (role-based)
 └── invitations   # Team-Einladungssystem
 ```
 
-#### Core Business Objects  
+#### Core Business Objects (45+ Felder)
 ```sql
-offer              # Hauptangebot (Fahrzeug + Finanzierung)
-├── credit_offer      # 1:n Finanzierungsoptionen
-└── offer_equipment   # n:m Ausstattungsmerkmale
+pdf_documents      # PDF-Speicher mit OCR-Text
+└── offer         # Hauptangebot (45+ Felder)
+    ├── dealers              # Händlerinformationen
+    ├── sales_persons        # Ansprechpartner
+    ├── credit_offers        # 1:n Finanzierungsoptionen (30+ Felder)
+    └── offer_equipment      # n:m Ausstattungsmerkmale
 ```
 
-#### Dictionary/Lookup Tables
+#### Dictionary/Lookup Tables (Alle befüllt!)
 ```sql
 # Fahrzeug-Klassifizierung
-offer_type, vehicle_category, vehicle_type, make
-fuel_type, transmission_type, availability_type
+makes (25), vehicle_categories (14), vehicle_types, 
+fuel_types (9), transmission_types (7), availability_types (7)
+offer_types (8)
 
-# Business Data
-equipment, credit_offer_type, credit_institution
+# Business Data  
+equipment, equipment_categories (9)
+credit_offer_types (6), credit_institutions (5)
+```
+
+### 🚀 Hybrid PDF-First Ansatz (NEU!)
+```typescript
+// Workflow: PDF → Text → On-Demand Extraction
+1. PDF Upload → Supabase Storage
+2. OCR via PDF.co → raw_text in pdf_documents
+3. KI-Extraktion (Claude) → ai_extracted fields
+4. On-Demand via FieldExtractorService → offer table
 ```
 
 ### 🔗 Supabase MCP-Server Setup
@@ -354,6 +369,48 @@ npx untitledui@latest add
 
 ### MCP-Server Management
 **Wichtig**: Nach .mcp.json Änderungen Claude Code Neustart erforderlich
+
+### Datenbank-Migration Best Practices (Jan 2025)
+**Problem**: Duplicate Tables, fehlende RLS, leere Dictionaries
+**Lösung**: DATABASE_INTEGRITY_CHECKER vor Production-Deploy
+```bash
+# Immer prüfen vor Deploy:
+- Keine doppelten Tabellen (offer vs offers)
+- Alle Tabellen haben RLS-Policies
+- Dictionary-Daten sind geseedet
+- Indizes auf FK-Spalten existieren
+```
+
+### PDF-Extraktion Architecture (Jan 2025)
+**Learning**: Store full text, extract fields on-demand
+```typescript
+// Hybrid-Ansatz vermeidet Re-Parsing:
+pdf_documents.extracted_data = {
+  raw_text: "Vollständiger OCR-Text",    // Einmal extrahiert
+  ai_extracted: { /* Strukturierte Daten */ },
+  metadata: { confidence: 95 }
+}
+// → FieldExtractorService für On-Demand-Felder
+```
+
+### Dev-Server Port-Konflikte
+**Problem**: Port 3000 belegt, Server startet auf 3001
+**Lösung**: Alle alten Prozesse beenden
+```bash
+# Alle npm dev Prozesse finden und beenden:
+pkill -f "npm run dev"
+# Frisch starten auf Port 3000
+npm run dev
+```
+
+### Playwright MCP File-Upload
+**Problem**: browser_file_upload braucht Modal-State
+**Lösung**: JavaScript evaluate für programmatischen Upload
+```javascript
+// File-Input direkt manipulieren:
+const file = new File(['content'], 'name.pdf', {type: 'application/pdf'})
+fileInput.files = dataTransfer.files
+```
 
 ---
 
