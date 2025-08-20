@@ -26,37 +26,77 @@ export function PdfLibrary() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<PdfDocument | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({})
+  const [pollingDocuments, setPollingDocuments] = useState<Set<string>>(new Set())
   const supabase = createClient()
 
   useEffect(() => {
     fetchDocuments()
     
-    // Realtime-Subscription für pdf_documents Updates
+    // Realtime-Subscription für pdf_documents Updates und Inserts
     const channel = supabase
       .channel('pdf-updates')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen to all events
           schema: 'public',
           table: 'pdf_documents'
         },
-        (payload) => {
-          console.log('PDF Update received:', payload)
-          // Update das entsprechende Dokument in der Liste
-          setDocuments(prevDocs => 
-            prevDocs.map(doc => 
-              doc.id === payload.new.id 
-                ? { ...doc, ...payload.new }
-                : doc
+        (payload: any) => {
+          console.log('🔄 Realtime event received:', payload.eventType, payload)
+          
+          if (payload.eventType === 'UPDATE') {
+            // Update das entsprechende Dokument in der Liste
+            setDocuments(prevDocs => {
+              const updatedDocs = prevDocs.map(doc => 
+                doc.id === payload.new.id 
+                  ? { ...doc, ...payload.new as PdfDocument }
+                  : doc
+              )
+              console.log('✅ Documents updated:', updatedDocs)
+              return updatedDocs
+            })
+            
+            // Clear progress when ready
+            const newStatus = payload.new.processing_status
+            if (newStatus === 'ready' || newStatus === 'failed' || newStatus === 'needs_review') {
+              setProgressMap(prev => {
+                const newMap = { ...prev }
+                delete newMap[payload.new.id]
+                return newMap
+              })
+            }
+          } else if (payload.eventType === 'INSERT') {
+            // Neues Dokument zur Liste hinzufügen
+            setDocuments(prevDocs => {
+              // Prüfe ob Dokument schon existiert
+              if (prevDocs.some(doc => doc.id === payload.new.id)) {
+                console.log('⚠️ Document already exists, skipping INSERT')
+                return prevDocs
+              }
+              const newDocs = [payload.new as PdfDocument, ...prevDocs]
+              console.log('✅ Document inserted:', newDocs)
+              return newDocs
+            })
+          } else if (payload.eventType === 'DELETE') {
+            // Dokument aus der Liste entfernen
+            setDocuments(prevDocs => 
+              prevDocs.filter(doc => doc.id !== payload.old.id)
             )
-          )
+          }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to realtime updates')
+        }
+      })
     
     // Cleanup bei Unmount
     return () => {
+      console.log('🔌 Unsubscribing from realtime updates')
       supabase.removeChannel(channel)
     }
   }, [])
@@ -102,8 +142,23 @@ export function PdfLibrary() {
 
       const result = await response.json()
       
-      // Add new document to list
-      setDocuments(prev => [result.document, ...prev])
+      // Start progress animation
+      startProgressAnimation(result.document.id)
+      
+      // Start polling als Fallback für Realtime
+      startPollingForDocument(result.document.id)
+      
+      // Fallback: Manuell Dokument hinzufügen falls Realtime nicht funktioniert
+      // Nach kurzer Verzögerung prüfen und ggf. manuell hinzufügen
+      setTimeout(() => {
+        setDocuments(prev => {
+          if (!prev.some(doc => doc.id === result.document.id)) {
+            console.log('⚠️ Document not received via realtime, adding manually')
+            return [result.document, ...prev]
+          }
+          return prev
+        })
+      }, 500)
       
       // Close modal and reset
       setUploadModalOpen(false)
@@ -211,6 +266,88 @@ export function PdfLibrary() {
     if (!bytes) return 'N/A'
     const mb = bytes / (1024 * 1024)
     return `${mb.toFixed(2)} MB`
+  }
+
+  // Animierte Progress-Simulation
+  const startPollingForDocument = (documentId: string) => {
+    console.log('🔄 Starting polling for document:', documentId)
+    setPollingDocuments(prev => new Set(prev).add(documentId))
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('pdf_documents')
+          .select('*')
+          .eq('id', documentId)
+          .single()
+        
+        if (!error && data) {
+          console.log('🔄 Polling update for document:', data.processing_status)
+          
+          // Update document in list
+          setDocuments(prevDocs => 
+            prevDocs.map(doc => 
+              doc.id === documentId ? data : doc
+            )
+          )
+          
+          // Stop polling wenn fertig
+          if (data.processing_status === 'ready' || 
+              data.processing_status === 'failed' || 
+              data.processing_status === 'needs_review') {
+            console.log('✅ Polling complete for document:', documentId)
+            clearInterval(pollInterval)
+            setPollingDocuments(prev => {
+              const newSet = new Set(prev)
+              newSet.delete(documentId)
+              return newSet
+            })
+            setProgressMap(prev => {
+              const newMap = { ...prev }
+              delete newMap[documentId]
+              return newMap
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error)
+      }
+    }, 2000) // Poll alle 2 Sekunden
+    
+    // Nach 60 Sekunden aufhören
+    setTimeout(() => {
+      clearInterval(pollInterval)
+      setPollingDocuments(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(documentId)
+        return newSet
+      })
+      console.log('⚠️ Polling timeout for document:', documentId)
+    }, 60000)
+  }
+  
+  const startProgressAnimation = (documentId: string) => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += Math.random() * 15 + 5 // Zufälliger Fortschritt zwischen 5-20%
+      
+      if (progress >= 90) {
+        progress = 90 // Bei 90% stoppen und auf echtes Ergebnis warten
+        clearInterval(interval)
+      }
+      
+      setProgressMap(prev => ({ ...prev, [documentId]: Math.min(progress, 90) }))
+    }, 800) // Update alle 800ms
+    
+    // Nach 30 Sekunden aufräumen falls keine Antwort
+    setTimeout(() => {
+      clearInterval(interval)
+      setProgressMap(prev => {
+        const newMap = { ...prev }
+        delete newMap[documentId]
+        return newMap
+      })
+    }, 30000)
   }
 
   const getVehicleTitle = (doc: PdfDocument) => {
@@ -366,13 +503,16 @@ export function PdfLibrary() {
                           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-3"></div>
                           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
                         </div>
-                        <div className="flex items-center gap-2 mt-3">
-                          <Lightbulb04 className="h-4 w-4 text-brand animate-pulse" />
-                          <span className="text-sm text-secondary animate-pulse">
-                            {doc.processing_status === 'uploaded' 
-                              ? 'KI-Analyse wird vorbereitet...' 
-                              : 'KI analysiert Dokument...'}
-                          </span>
+                        {/* Progress Bar während der Analyse */}
+                        <div className="mt-3">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className="bg-brand h-2 rounded-full transition-all duration-300 ease-out"
+                              style={{ 
+                                width: `${progressMap[doc.id] || 0}%`
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -483,28 +623,17 @@ export function PdfLibrary() {
                   </Button>
                 ) : (doc.processing_status === 'extracting' || doc.processing_status === 'uploaded') ? (
                   <div className="mb-3">
-                    <div className="h-10 flex items-center justify-center mb-2">
-                      <Lightbulb04 className="h-5 w-5 text-brand animate-pulse mr-2" />
-                      <span className="text-sm text-secondary">
-                        {doc.processing_status === 'uploaded' 
-                          ? 'KI-Analyse startet...'
-                          : 'KI analysiert Dokument...'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-brand h-2 rounded-full transition-all duration-500 ease-in-out"
-                        style={{ 
-                          width: doc.processing_status === 'uploaded' ? '20%' : '60%',
-                          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-secondary text-center mt-2">
-                      {doc.processing_status === 'uploaded'
-                        ? 'Dokument wird vorbereitet...'
-                        : 'Dies kann bis zu 30 Sekunden dauern'}
-                    </p>
+                    <Button
+                      size="md"
+                      variant="secondary"
+                      className="w-full cursor-not-allowed opacity-50"
+                      disabled
+                    >
+                      <div className="flex items-center gap-2">
+                        <Lightbulb04 className="h-4 w-4 animate-pulse" />
+                        <span>Wird analysiert...</span>
+                      </div>
+                    </Button>
                   </div>
                 ) : null}
 

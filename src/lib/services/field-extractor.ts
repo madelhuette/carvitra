@@ -1,4 +1,5 @@
 import { anthropic } from '@/lib/anthropic/client'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Field Extractor Service
@@ -117,7 +118,7 @@ ${rawText.substring(0, 5000)}
       }
       return null
     } catch (error) {
-      console.error(`Error extracting field ${fieldName}:`, error)
+      logger.error(`Error extracting field ${fieldName}:`, error)
       return null
     }
   }
@@ -192,7 +193,7 @@ ${rawText}
 `
 
     try {
-      console.log('[Field Extractor] Starting comprehensive extraction for landingpage...')
+      logger.service('Field Extractor', 'Starting comprehensive extraction for landingpage')
       
       const response = await anthropic.messages.create({
         model: 'claude-3-5-sonnet-20241022',
@@ -221,7 +222,7 @@ ${rawText}
       
       throw new Error('No valid JSON in response')
     } catch (error) {
-      console.error('[Field Extractor] Extraction failed:', error)
+      logger.error('Field Extractor - Extraction failed:', error)
       return {
         metadata: {
           confidence: 0,
@@ -253,7 +254,7 @@ ${rawText}
       return existingData
     }
 
-    console.log('[Field Extractor] Extracting missing fields:', missingFields)
+    logger.service('Field Extractor', 'Extracting missing fields', missingFields)
 
     const results: any = { ...existingData }
     

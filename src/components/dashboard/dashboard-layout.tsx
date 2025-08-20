@@ -18,6 +18,7 @@ import {
   Link03
 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
+import { CarvtraLogo } from "@/components/foundations/logo/carvitra-logo";
 import { logout } from "@/app/actions/auth";
 
 interface DashboardLayoutProps {
@@ -60,8 +61,13 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
       <div className={`fixed inset-0 z-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
         <div className="fixed left-0 top-0 h-full w-72 bg-primary border-r border-secondary">
-          <div className="flex h-16 items-center justify-between px-6">
-            <h2 className="text-lg font-semibold text-primary">CARVITRA</h2>
+          <div className="flex h-20 items-center px-6">
+            <div className="w-full">
+              <CarvtraLogo size="sm" disableLink />
+              <div className="mt-2">
+                <span className="text-[10px] text-tertiary/60 uppercase tracking-widest font-medium">Management Portal</span>
+              </div>
+            </div>
             <Button
               iconOnly
               variant="ghost"
@@ -93,10 +99,15 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
         <div className="flex flex-1 flex-col border-r border-secondary bg-primary">
-          <div className="flex h-16 items-center px-6">
-            <h2 className="text-lg font-semibold text-primary">CARVITRA Dashboard</h2>
+          <div className="flex h-28 items-center px-6">
+            <div className="w-full py-4">
+              <CarvtraLogo size="md" disableLink />
+              <div className="mt-3">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary text-[10px] font-medium text-secondary uppercase tracking-widest">Management Portal</span>
+              </div>
+            </div>
           </div>
-          <nav className="mt-6 flex-1 px-3">
+          <nav className="mt-4 flex-1 px-3">
             {navigation.map((item) => (
               <a
                 key={item.name}

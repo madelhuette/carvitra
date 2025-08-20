@@ -5,6 +5,7 @@ import { useId, useRef, useState } from "react";
 import { UploadCloud02 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
+import { FileTrigger } from "@/components/base/file-upload-trigger/file-upload-trigger";
 import { cx } from "@/utils/cx";
 
 interface PdfUploadDropZoneProps {
@@ -52,15 +53,13 @@ export const PdfUploadDropZone = ({
     className,
     hint,
     isDisabled,
-    accept,
-    allowsMultiple = true,
-    maxSize,
+    accept = "application/pdf,.pdf",
+    allowsMultiple = false,
+    maxSize = 10 * 1024 * 1024, // 10MB default
     onDropFiles,
     onDropUnacceptedFiles,
     onSizeLimitExceed,
 }: PdfUploadDropZoneProps) => {
-    const id = useId();
-    const inputRef = useRef<HTMLInputElement>(null);
     const [isInvalid, setIsInvalid] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -155,10 +154,7 @@ export const PdfUploadDropZone = ({
             onDropUnacceptedFiles(unacceptedDataTransfer.files);
         }
 
-        // Clear the input value to ensure the same file can be selected again
-        if (inputRef.current) {
-            inputRef.current.value = "";
-        }
+        // File input clearing is handled by FileTrigger
     };
 
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -168,8 +164,10 @@ export const PdfUploadDropZone = ({
         processFiles(Array.from(event.dataTransfer.files));
     };
 
-    const handleInputFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        processFiles(Array.from(event.target.files || []));
+    const handleFileSelect = (files: FileList | null) => {
+        if (files) {
+            processFiles(Array.from(files));
+        }
     };
 
     return (
@@ -181,43 +179,46 @@ export const PdfUploadDropZone = ({
             onDragEnd={handleDragOut}
             onDrop={handleDrop}
             className={cx(
-                "relative flex flex-col items-center gap-3 rounded-xl bg-secondary px-6 py-4 text-secondary ring-1 ring-tertiary transition duration-100 ease-linear ring-inset",
-                isDraggingOver && "ring-2 ring-brand",
-                isDisabled && "cursor-not-allowed bg-disabled_subtle ring-disabled_subtle",
+                "relative flex flex-col items-center gap-4 rounded-xl bg-primary px-6 py-8 text-tertiary ring-1 ring-secondary transition-all duration-200 ease-in-out ring-inset",
+                isDraggingOver && "ring-2 ring-brand bg-brand-25",
+                isDisabled && "cursor-not-allowed bg-disabled_subtle ring-disabled_subtle opacity-60",
                 className,
             )}
         >
-            <FeaturedIcon color="gray" theme="modern" size="md">
-                <UploadCloud02 className="size-5" />
+            <FeaturedIcon 
+                color={isDraggingOver ? "brand" : "gray"} 
+                theme="light-circle-outline" 
+                size="lg"
+                className="transition-colors duration-200"
+            >
+                <UploadCloud02 className="size-6" />
             </FeaturedIcon>
 
-            <div className="flex flex-col gap-1 text-center">
-                <input
-                    ref={inputRef}
-                    id={id}
-                    type="file"
-                    className="peer sr-only"
-                    disabled={isDisabled}
-                    accept={accept}
-                    multiple={allowsMultiple}
-                    onChange={handleInputFileChange}
-                />
-                <Button 
-                    color="link-color" 
-                    size="md" 
-                    isDisabled={isDisabled}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        inputRef.current?.click();
-                    }}
-                >
-                    Klicken zum Hochladen
-                </Button>
-                <span className="text-sm text-secondary">
-                    oder per Drag & Drop hierher ziehen
-                </span>
-                <p className={cx("text-xs transition duration-100 ease-linear", isInvalid && "text-error-primary")}>
-                    {hint || "SVG, PNG, JPG oder GIF (max. 800x400px)"}
+            <div className="flex flex-col items-center gap-1.5 text-center">
+                <div className="flex items-center gap-1.5">
+                    <FileTrigger
+                        onSelect={handleFileSelect}
+                        acceptedFileTypes={accept.split(",")}
+                        allowsMultiple={allowsMultiple}
+                    >
+                        <Button 
+                            color="link-color" 
+                            size="md" 
+                            isDisabled={isDisabled}
+                            type="button"
+                        >
+                            Klicken zum Hochladen
+                        </Button>
+                    </FileTrigger>
+                    <span className="text-sm font-medium text-secondary">
+                        oder Datei hierher ziehen
+                    </span>
+                </div>
+                <p className={cx(
+                    "text-xs text-tertiary mt-1 transition-colors duration-200", 
+                    isInvalid && "text-error-primary font-medium"
+                )}>
+                    {hint || "PDF-Dokumente bis zu 10 MB"}
                 </p>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -33,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   // Log authentication status for debugging
   if (error) {
-    console.error('Middleware auth error:', error)
+    logger.error('Middleware auth error:', error)
   }
 
   // Protected routes

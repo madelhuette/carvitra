@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { uploadToStorage, deleteFromStorage, createSignedUrl } from '@/lib/supabase/admin'
 import { v4 as uuidv4 } from 'uuid'
+import { logger } from '@/lib/utils/logger'
+import { getBaseUrl } from '@/lib/utils/url'
 
 /**
  * Sicherer PDF-Upload Endpoint
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
         upsert: false
       })
     } catch (uploadError) {
-      console.error('Storage upload error:', uploadError)
+      logger.error('Storage upload error:', uploadError)
       return NextResponse.json({ 
         error: 'Failed to upload file to storage' 
       }, { status: 500 })
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
     } catch (urlError) {
       // Cleanup bei Fehler
       await deleteFromStorage('pdf-documents', [filePath])
-      console.error('Signed URL error:', urlError)
+      logger.error('Signed URL error:', urlError)
       return NextResponse.json({ 
         error: 'Failed to generate access URL' 
       }, { status: 500 })
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       // Clean up uploaded file if database insert fails
       await deleteFromStorage('pdf-documents', [filePath])
-      console.error('Database error:', dbError)
+      logger.error('Database error:', dbError)
       return NextResponse.json({ 
         error: 'Failed to save document record' 
       }, { status: 500 })
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
     } catch (auditError) {
-      console.log('Audit log error (non-critical):', auditError)
+      logger.debug('Audit log error (non-critical):', auditError)
     }
     
     // Trigger extraction process (async)
@@ -161,14 +163,13 @@ export async function POST(request: NextRequest) {
       extractionHeaders['Cookie'] = cookieHeader
     }
     
-    // Use absolute URL for extraction - detect correct port
-    const host = request.headers.get('host') || 'localhost:3001'
-    const protocol = host.includes('localhost') ? 'http' : 'https'
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
+    // Use dynamic URL for extraction
+    const baseUrl = getBaseUrl(request)
     
-    console.log('[PDF Upload] Triggering extraction for document:', pdfDocument.id)
-    console.log('[PDF Upload] Using base URL:', baseUrl)
-    console.log('[PDF Upload] Auth present:', !!authHeader || !!cookieHeader)
+    logger.api(`${baseUrl}/api/pdf/extract`, 'POST', { 
+      document_id: pdfDocument.id,
+      auth_present: !!authHeader || !!cookieHeader 
+    })
     
     // Async extraction trigger mit besserer Fehlerbehandlung und höherem Timeout
     fetch(`${baseUrl}/api/pdf/extract`, {
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
     .then(async (res) => {
       if (!res.ok) {
         const errorText = await res.text()
-        console.error('[PDF Upload] Extraction trigger failed:', res.status, errorText)
+        logger.error('Extraction trigger failed:', res.status, errorText)
         
         // Update status zu failed bei Fehler
         await supabase
@@ -191,11 +192,11 @@ export async function POST(request: NextRequest) {
           })
           .eq('id', pdfDocument.id)
       } else {
-        console.log('[PDF Upload] Extraction triggered successfully')
+        logger.info('Extraction triggered successfully')
       }
     })
     .catch(err => {
-      console.error('[PDF Upload] Failed to trigger extraction:', err)
+      logger.error('Failed to trigger extraction:', err)
       
       // Update status zu failed bei Netzwerkfehler
       supabase
@@ -205,8 +206,8 @@ export async function POST(request: NextRequest) {
           processing_error: `Network error: ${err.message}`
         })
         .eq('id', pdfDocument.id)
-        .then(() => console.log('[PDF Upload] Status updated to failed'))
-        .catch(updateErr => console.error('[PDF Upload] Failed to update status:', updateErr))
+        .then(() => logger.debug('Status updated to failed'))
+        .catch(updateErr => logger.error('Failed to update status:', updateErr))
     })
     
     return NextResponse.json({
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('PDF upload error:', error)
+    logger.error('PDF upload error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
