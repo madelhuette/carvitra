@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { RouteProvider } from "@/providers/router-provider";
 import { Theme } from "@/providers/theme";
+import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import "@/styles/globals.css";
 import { cx } from "@/utils/cx";
 
@@ -27,11 +28,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="de" suppressHydrationWarning>
             <body className={cx(inter.variable, "bg-primary antialiased")}>
-                <RouteProvider>
-                    <Theme>{children}</Theme>
-                </RouteProvider>
+                <ErrorBoundary>
+                    <RouteProvider>
+                        <Theme>{children}</Theme>
+                    </RouteProvider>
+                </ErrorBoundary>
             </body>
         </html>
     );

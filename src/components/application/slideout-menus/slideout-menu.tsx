@@ -18,7 +18,7 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
             {...props}
             className={(state) =>
                 cx(
-                    "fixed inset-0 flex min-h-dvh w-full items-center justify-end bg-overlay/70 pl-6 outline-hidden ease-linear md:pl-10",
+                    "fixed inset-0 z-[9999] flex min-h-dvh w-full items-center justify-end bg-overlay/70 pl-0 sm:pl-4 md:pl-6 lg:pl-10 outline-hidden ease-linear backdrop-blur-sm",
                     state.isEntering && "duration-300 animate-in fade-in",
                     state.isExiting && "duration-500 animate-out fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
@@ -36,7 +36,7 @@ export const Modal = (props: ModalProps) => (
         {...props}
         className={(state) =>
             cx(
-                "inset-y-0 right-0 h-full w-full max-w-100 shadow-xl transition",
+                "fixed inset-y-0 right-0 z-[10000] h-full w-full max-w-full sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] xl:max-w-[75vw] 2xl:max-w-[1400px] shadow-xl transition",
                 state.isEntering && "duration-300 animate-in slide-in-from-right",
                 state.isExiting && "duration-500 animate-out slide-out-to-right",
                 typeof props.className === "function" ? props.className(state) : props.className,

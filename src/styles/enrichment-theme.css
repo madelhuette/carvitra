@@ -1,0 +1,142 @@
+/* Enrichment Feature Theme Variables */
+
+:root {
+  /* Confidence Level Colors - Light Mode */
+  --color-confidence-excellent: rgb(34, 197, 94); /* green-500 */
+  --color-confidence-good: rgb(251, 191, 36); /* amber-400 */
+  --color-confidence-moderate: rgb(251, 146, 60); /* orange-400 */
+  --color-confidence-low: rgb(239, 68, 68); /* red-500 */
+  
+  /* German Energy Efficiency Classes (Energieeffizienzklassen) */
+  /* These colors are legally required and standardized */
+  --color-efficiency-a: rgb(0, 146, 63); /* #00923F */
+  --color-efficiency-b: rgb(79, 185, 72); /* #4FB948 */
+  --color-efficiency-c: rgb(142, 214, 68); /* #8ED644 */
+  --color-efficiency-d: rgb(243, 231, 63); /* #F3E73F */
+  --color-efficiency-e: rgb(251, 186, 60); /* #FBBA3C */
+  --color-efficiency-f: rgb(243, 123, 56); /* #F37B38 */
+  --color-efficiency-g: rgb(237, 28, 36); /* #ED1C24 */
+  
+  /* Text colors for efficiency badges */
+  --color-efficiency-a-text: rgb(255, 255, 255);
+  --color-efficiency-b-text: rgb(255, 255, 255);
+  --color-efficiency-c-text: rgb(17, 24, 39); /* gray-900 */
+  --color-efficiency-d-text: rgb(17, 24, 39);
+  --color-efficiency-e-text: rgb(17, 24, 39);
+  --color-efficiency-f-text: rgb(255, 255, 255);
+  --color-efficiency-g-text: rgb(255, 255, 255);
+}
+
+/* Dark Mode Overrides */
+.dark {
+  /* Confidence Level Colors - Dark Mode */
+  --color-confidence-excellent: rgb(74, 222, 128); /* green-400 */
+  --color-confidence-good: rgb(251, 191, 36); /* amber-400 */
+  --color-confidence-moderate: rgb(251, 146, 60); /* orange-400 */
+  --color-confidence-low: rgb(248, 113, 113); /* red-400 */
+  
+  /* Energy Efficiency Classes remain the same in dark mode */
+  /* as they are standardized colors */
+}
+
+/* Utility Classes for Confidence Levels */
+.text-confidence-excellent {
+  color: var(--color-confidence-excellent);
+}
+
+.text-confidence-good {
+  color: var(--color-confidence-good);
+}
+
+.text-confidence-moderate {
+  color: var(--color-confidence-moderate);
+}
+
+.text-confidence-low {
+  color: var(--color-confidence-low);
+}
+
+/* Utility Classes for Energy Efficiency */
+.bg-efficiency-a {
+  background-color: var(--color-efficiency-a);
+}
+
+.bg-efficiency-b {
+  background-color: var(--color-efficiency-b);
+}
+
+.bg-efficiency-c {
+  background-color: var(--color-efficiency-c);
+}
+
+.bg-efficiency-d {
+  background-color: var(--color-efficiency-d);
+}
+
+.bg-efficiency-e {
+  background-color: var(--color-efficiency-e);
+}
+
+.bg-efficiency-f {
+  background-color: var(--color-efficiency-f);
+}
+
+.bg-efficiency-g {
+  background-color: var(--color-efficiency-g);
+}
+
+.text-efficiency-a {
+  color: var(--color-efficiency-a-text);
+}
+
+.text-efficiency-b {
+  color: var(--color-efficiency-b-text);
+}
+
+.text-efficiency-c {
+  color: var(--color-efficiency-c-text);
+}
+
+.text-efficiency-d {
+  color: var(--color-efficiency-d-text);
+}
+
+.text-efficiency-e {
+  color: var(--color-efficiency-e-text);
+}
+
+.text-efficiency-f {
+  color: var(--color-efficiency-f-text);
+}
+
+.text-efficiency-g {
+  color: var(--color-efficiency-g-text);
+}
+
+.border-efficiency-a {
+  border-color: var(--color-efficiency-a);
+}
+
+.border-efficiency-b {
+  border-color: var(--color-efficiency-b);
+}
+
+.border-efficiency-c {
+  border-color: var(--color-efficiency-c);
+}
+
+.border-efficiency-d {
+  border-color: var(--color-efficiency-d);
+}
+
+.border-efficiency-e {
+  border-color: var(--color-efficiency-e);
+}
+
+.border-efficiency-f {
+  border-color: var(--color-efficiency-f);
+}
+
+.border-efficiency-g {
+  border-color: var(--color-efficiency-g);
+}

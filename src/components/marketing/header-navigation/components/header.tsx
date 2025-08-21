@@ -8,6 +8,7 @@ import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialog
 import { Button } from "@/components/base/buttons/button";
 import { CarvtraLogo, CarvtraLogoMinimal } from "@/components/foundations/logo/carvitra-logo";
 import { PlatformDropdown, ResourceDropdown, PricingDropdown } from "@/components/marketing/header-navigation/automotive-dropdown-navigation";
+import Link from "next/link";
 import { cx } from "@/utils/cx";
 
 type HeaderNavItem = {
@@ -80,9 +81,11 @@ const MobileFooter = () => {
             </div>
             <div className="flex flex-col gap-3">
                 <Button size="lg">Demo starten</Button>
-                <Button color="secondary" size="lg" href="/auth/login">
-                    Anmelden
-                </Button>
+                <Link href="/auth/login" className="w-full">
+                    <Button color="secondary" size="lg" className="w-full">
+                        Anmelden
+                    </Button>
+                </Link>
             </div>
         </div>
     );
@@ -195,9 +198,11 @@ export const Header = ({ items = headerNavItems, isFullWidth, isFloating, classN
                                 <div className="size-5" />
                             )}
                         </Button>
-                        <Button color="secondary" size={isFloating ? "md" : "lg"} href="/auth/login">
-                            Anmelden
-                        </Button>
+                        <Link href="/auth/login">
+                            <Button color="secondary" size={isFloating ? "md" : "lg"}>
+                                Anmelden
+                            </Button>
+                        </Link>
                         <Button color="primary" size={isFloating ? "md" : "lg"}>
                             Demo starten
                         </Button>

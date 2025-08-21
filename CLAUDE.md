@@ -257,6 +257,15 @@ npx prettier --write .
 3. **Testing**: Kontinuierlich testen während Entwicklung
 4. **Code-Review**: Finale Prüfung vor Commit
 
+### 📚 Agent-Briefings
+Alle automatisierten Agents befinden sich in `/agent-briefings/`:
+- **`database-integrity-agent.md`** - DB-Konsistenz & RLS-Checks
+- **`design-compliance-agent.md`** - UI/UX Compliance mit Untitled UI
+- **`test-automation-agent.md`** - E2E Testing mit Playwright
+- **`.claude/`** - Claude-spezifische Agent-Konfigurationen
+
+Agents werden automatisch bei relevanten Code-Änderungen getriggert.
+
 ---
 
 ## 📚 ENTWICKLUNGS-LEARNINGS & BEST PRACTICES
@@ -426,6 +435,166 @@ npm run dev
 const file = new File(['content'], 'name.pdf', {type: 'application/pdf'})
 fileInput.files = dataTransfer.files
 ```
+
+### Landing Page Wizard Implementation (Jan 2025)
+**Erfolgreicher 7-Schritte Wizard implementiert:**
+1. **Fahrzeugdaten** - Marke, Modell, Variante
+2. **Technische Details** - Motor, Verbrauch, Emissionen  
+3. **Ausstattung** - Farben, Sitze, Equipment
+4. **Verfügbarkeit** - Preise, Liefertermin
+5. **Finanzierung** - Leasing/Kredit-Angebote
+6. **Ansprechpartner** - Verkäufer-Auswahl
+7. **Marketing** - SEO-Texte und URL
+
+**Wichtige Learnings:**
+- Auto-Save alle 30 Sekunden (nur mit offerId)
+- Wizard-Context Pattern für State-Management
+- Step-basierte KI-Analyse mit Anthropic Claude
+
+### Supabase Async Client Initialization (Jan 2025)
+**Problem**: Race Condition bei Service-Initialisierung
+**Lösung**: Lazy Initialization Pattern
+```typescript
+// ✅ RICHTIG - Lazy init mit ensureInitialized()
+class FieldMappingService {
+  private async ensureInitialized() {
+    if (!this.initialized) {
+      this.supabase = await createClient()
+      this.initialized = true
+    }
+  }
+  
+  async mapToId() {
+    await this.ensureInitialized() // Immer zuerst!
+    // ... rest of logic
+  }
+}
+```
+
+### Status Constraints in Offer Table (Jan 2025)  
+**Problem**: Check Constraint violation bei 'published'
+**Lösung**: Nur erlaubte Status-Werte verwenden
+```typescript
+// ✅ Erlaubte Werte
+status: 'draft' | 'active' | 'sold' | 'reserved' | 'archived'
+
+// ❌ FALSCH
+status: 'published' // Führt zu Constraint-Fehler!
+```
+
+### Landing Pages Table Structure (Jan 2025)
+**Neue Tabelle für Landing Pages:**
+```sql
+CREATE TABLE landing_pages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id),
+  offer_id UUID NOT NULL REFERENCES offer(id),
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL,
+  status VARCHAR(50) DEFAULT 'draft',
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Mit RLS-Policy
+CREATE POLICY "landing_pages_organization_access" ON landing_pages
+FOR ALL USING (
+  organization_id = (SELECT organization_id FROM user_profiles WHERE user_id = auth.uid())
+);
+```
+
+### Strukturiertes Logging Best Practices (Jan 2025)
+**Problem**: Console.logs in Production Code
+**Lösung**: Winston Logger mit strukturiertem Logging
+```typescript
+// ✅ RICHTIG - Modul-basierter Logger
+import { createLogger } from '@/lib/logger'
+const logger = createLogger('ModuleName')
+logger.info('Operation successful', { userId, action })
+logger.error('Operation failed', error)
+
+// ❌ FALSCH - Console.logs
+console.log('Debug info')
+console.error('Error:', error)
+```
+**Log-Levels**: error, warn, info, debug (debug nur in Development)
+
+### Input-Validierung mit Zod (Jan 2025)
+**Pattern**: Alle API-Routes mit Zod-Schemas validieren
+```typescript
+// ✅ RICHTIG - Validierung vor Verarbeitung
+import { pdfExtractSchema } from '@/lib/validation/schemas'
+
+const validation = pdfExtractSchema.safeParse(body)
+if (!validation.success) {
+  return NextResponse.json({ 
+    error: 'Invalid request', 
+    details: validation.error.errors 
+  }, { status: 400 })
+}
+
+// ❌ FALSCH - Direkter Zugriff ohne Validierung
+const { pdf_document_id } = await request.json()
+```
+
+### Error Boundaries für Stabilität (Jan 2025)
+**Kritisch**: Global Error Boundary verhindert App-Crashes
+```typescript
+// In Root Layout implementiert
+<ErrorBoundary>
+  <ThemeProvider>
+    <RouterProvider>{children}</RouterProvider>
+  </ThemeProvider>
+</ErrorBoundary>
+```
+**Features**:
+- Graceful Error Handling mit Fallback UI
+- Error-Logging an zentraler Stelle
+- Recovery-Actions (Reload, Back)
+- Stack Traces nur in Development
+
+### State Management Architecture (Jan 2025)
+**Best Practice**: Klare Trennung von State-Typen
+```typescript
+// Client-State mit Zustand
+import { useAppStore } from '@/stores/app-store'
+const { user, setUser } = useAppStore()
+
+// Server-State mit Supabase
+const { data } = await supabase.from('table').select()
+
+// Features:
+- Persistierung kritischer Daten
+- Global Loading States
+- Notification System
+- PDF Processing State Management
+```
+
+### Code-Splitting & Performance (Jan 2025)
+**Pattern**: Lazy Loading für bessere Performance
+```typescript
+// ✅ RICHTIG - Dynamic Imports für große Komponenten
+const StepVehicleBasics = lazy(() => 
+  import('./steps/step-vehicle-basics')
+)
+
+// Mit Suspense Boundary
+<Suspense fallback={<LoadingIndicator />}>
+  <StepComponent />
+</Suspense>
+```
+
+### Security & .env.local Klarstellung (Jan 2025)
+**WICHTIG**: .env.local ist SICHER für lokale Entwicklung
+- ✅ Datei in .gitignore = wird nicht committed
+- ✅ Nur auf lokalem Rechner verfügbar
+- ✅ Korrekte Verwendung für API-Keys
+- ✅ Production-Secrets in Umgebungsvariablen (Vercel/Deployment)
+
+**Missverständnis-Vermeidung**:
+- Lokale Tools können .env.local lesen = NORMAL und ERWÜNSCHT
+- Das bedeutet NICHT, dass die Datei öffentlich ist
+- Git-Status zeigt .env.local nicht = KORREKT konfiguriert
 
 ---
 

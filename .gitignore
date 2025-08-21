@@ -48,3 +48,9 @@ next-env.d.ts
 
 # server management
 .server-lock.json
+
+# test artifacts
+.playwright-mcp/
+test-results/
+playwright-report/
+*.log

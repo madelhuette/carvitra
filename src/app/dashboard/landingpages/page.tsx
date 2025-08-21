@@ -1,34 +1,53 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { EmptyState } from '@/components/application/empty-state/empty-state'
 import { Link03, Plus } from '@untitledui/icons'
 import { Button } from '@/components/base/buttons/button'
 
-export default async function LandingpagesPage() {
-  const supabase = await createClient()
+export default function LandingpagesPage() {
+  const [userData, setUserData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    companyName: 'Lade...'
+  })
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    async function loadUserData() {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/auth/signin')
-  }
+      if (!user) {
+        router.push('/auth/signin')
+        return
+      }
 
-  // Get user profile data
-  const { data: profile } = await supabase
-    .from('users')
-    .select('first_name, last_name, organization:organizations(name)')
-    .eq('id', user.id)
-    .single()
+      // Get user profile data
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('first_name, last_name, organization:organizations(name)')
+        .eq('user_id', user.id)
+        .single()
 
-  const userData = {
-    email: user.email || '',
-    firstName: profile?.first_name || '',
-    lastName: profile?.last_name || '',
-    companyName: profile?.organization?.name || 'Unbekannte Organisation'
-  }
+      setUserData({
+        email: user.email || '',
+        firstName: profile?.first_name || '',
+        lastName: profile?.last_name || '',
+        companyName: profile?.organization?.name || 'Unbekannte Organisation'
+      })
+      setLoading(false)
+    }
+    
+    loadUserData()
+  }, [router, supabase])
 
   return (
     <DashboardLayout user={userData}>

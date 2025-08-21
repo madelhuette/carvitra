@@ -39,12 +39,15 @@ export const LoginForm = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Clear previous errors
+        setError("");
+        
+        // Validate form on submit
         if (!validateForm()) {
             return;
         }
 
         setIsLoading(true);
-        setError("");
 
         try {
             const result = await login(formData);
@@ -57,6 +60,24 @@ export const LoginForm = () => {
         } catch (err) {
             setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
             setIsLoading(false);
+        }
+    };
+
+    // Real-time validation for email
+    const handleEmailChange = (value: string) => {
+        setFormData({ ...formData, email: value });
+        // Clear email error when user starts typing
+        if (validationErrors.email) {
+            setValidationErrors({ ...validationErrors, email: undefined });
+        }
+    };
+
+    // Real-time validation for password
+    const handlePasswordChange = (value: string) => {
+        setFormData({ ...formData, password: value });
+        // Clear password error when user starts typing
+        if (validationErrors.password) {
+            setValidationErrors({ ...validationErrors, password: undefined });
         }
     };
 
@@ -92,11 +113,12 @@ export const LoginForm = () => {
                         type="email"
                         placeholder="name@firma.de"
                         value={formData.email}
-                        onChange={(value) => setFormData({ ...formData, email: value })}
+                        onChange={handleEmailChange}
                         error={validationErrors.email}
                         disabled={isLoading}
                         className="mt-1"
                         autoComplete="email"
+                        required
                     />
                 </div>
 
@@ -104,7 +126,7 @@ export const LoginForm = () => {
                     id="password"
                     label="Passwort"
                     value={formData.password}
-                    onChange={(value) => setFormData({ ...formData, password: value })}
+                    onChange={handlePasswordChange}
                     error={validationErrors.password}
                     disabled={isLoading}
                     placeholder="Ihr Passwort"
@@ -112,17 +134,20 @@ export const LoginForm = () => {
                 />
 
                 <div className="flex items-center justify-between">
-                    <Checkbox
-                        id="remember-me"
-                        label="Angemeldet bleiben"
-                        checked={formData.rememberMe}
-                        onChange={(checked) => setFormData({ ...formData, rememberMe: checked })}
-                        disabled={isLoading}
-                    />
+                    <div className="flex items-center">
+                        <Checkbox
+                            id="remember-me"
+                            label="Angemeldet bleiben"
+                            checked={formData.rememberMe}
+                            onChange={(checked) => setFormData({ ...formData, rememberMe: checked })}
+                            disabled={isLoading}
+                            className="cursor-pointer"
+                        />
+                    </div>
                     
                     <a 
                         href={AUTH_ROUTES.FORGOT_PASSWORD}
-                        className="text-sm text-brand-600 hover:text-brand-700 font-medium"
+                        className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors"
                     >
                         Passwort vergessen?
                     </a>
@@ -134,9 +159,9 @@ export const LoginForm = () => {
                     className="w-full"
                     disabled={isLoading}
                     loading={isLoading}
-                    iconLeading={LogIn01}
+                    iconLeading={!isLoading ? LogIn01 : undefined}
                 >
-                    Anmelden
+                    {isLoading ? "Anmeldung läuft..." : "Anmelden"}
                 </Button>
             </form>
 

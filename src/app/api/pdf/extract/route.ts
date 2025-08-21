@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { PDFCoService } from '@/lib/services/pdf-co-service'
 import { AIExtractionService } from '@/lib/services/ai-extraction'
+import { PerplexityEnrichmentService } from '@/services/perplexity-enrichment.service'
+import { pdfExtractSchema } from '@/lib/validation/schemas'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('API:PDF:Extract')
 
 export async function POST(request: NextRequest) {
-  console.log('[PDF Extract] Starting extraction process')
+  logger.info('Starting extraction process')
   
   try {
     const supabase = await createClient()
@@ -13,25 +18,32 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError) {
-      console.error('[PDF Extract] Auth error:', authError)
+      logger.error('Auth error', authError)
       return NextResponse.json({ error: 'Authentication failed', details: authError.message }, { status: 401 })
     }
     
     if (!user) {
-      console.error('[PDF Extract] No user found in session')
+      logger.error('No user found in session')
       return NextResponse.json({ error: 'Unauthorized - No user session' }, { status: 401 })
     }
     
-    console.log('[PDF Extract] User authenticated:', user.id)
+    logger.debug('User authenticated', { userId: user.id })
     
-    const { pdf_document_id } = await request.json()
+    // Validate request body with Zod
+    const body = await request.json()
+    const validation = pdfExtractSchema.safeParse(body)
     
-    if (!pdf_document_id) {
-      console.error('[PDF Extract] No document ID provided')
-      return NextResponse.json({ error: 'No document ID provided' }, { status: 400 })
+    if (!validation.success) {
+      logger.warn('Invalid request body', { errors: validation.error.errors })
+      return NextResponse.json({ 
+        error: 'Invalid request', 
+        details: validation.error.errors 
+      }, { status: 400 })
     }
     
-    console.log('[PDF Extract] Processing document:', pdf_document_id)
+    const { pdf_document_id } = validation.data
+    
+    logger.info('Processing document', { documentId: pdf_document_id })
     
     // Get PDF document
     const { data: pdfDoc, error: fetchError } = await supabase
@@ -41,16 +53,16 @@ export async function POST(request: NextRequest) {
       .single()
     
     if (fetchError) {
-      console.error('[PDF Extract] Database fetch error:', fetchError)
+      logger.error('Database fetch error', fetchError)
       return NextResponse.json({ error: 'Database error', details: fetchError.message }, { status: 500 })
     }
     
     if (!pdfDoc) {
-      console.error('[PDF Extract] Document not found:', pdf_document_id)
+      logger.warn('Document not found', { documentId: pdf_document_id })
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
     
-    console.log('[PDF Extract] Document found:', pdfDoc.file_name)
+    logger.debug('Document found', { fileName: pdfDoc.file_name })
     
     // Update status to extracting
     await supabase
@@ -60,7 +72,9 @@ export async function POST(request: NextRequest) {
     
     try {
       // Extract text using PDF.co API
-      console.log('[PDF Extract] Using PDF.co to extract text from:', pdfDoc.file_url?.substring(0, 50) + '...')
+      logger.info('Using PDF.co to extract text', { 
+        urlPrefix: pdfDoc.file_url?.substring(0, 50) + '...' 
+      })
       
       const extractionResult = await PDFCoService.extractTextFromPDF(pdfDoc.file_url, {
         lang: 'deu', // German language for OCR
@@ -68,12 +82,14 @@ export async function POST(request: NextRequest) {
       })
       
       if (extractionResult.error) {
-        console.error('[PDF Extract] PDF.co extraction error:', extractionResult.error)
+        logger.error('PDF.co extraction error', { error: extractionResult.error })
         throw new Error(extractionResult.error)
       }
       
-      console.log('[PDF Extract] Text extracted successfully')
-      console.log('[PDF Extract] Pages:', extractionResult.pageCount, 'Text length:', extractionResult.text.length)
+      logger.info('Text extracted successfully', {
+        pages: extractionResult.pageCount,
+        textLength: extractionResult.text.length
+      })
       
       // Create pdfData object compatible with existing code
       const pdfData = {
@@ -191,6 +207,57 @@ export async function POST(request: NextRequest) {
         
         console.log('[PDF Extract] Document updated successfully with status:', processingStatus)
         
+        // Perplexity Enrichment durchführen
+        console.log('[PDF Extract] Starting Perplexity enrichment...')
+        try {
+          const enrichmentService = new PerplexityEnrichmentService(supabase)
+          
+          // Extrahiere Fahrzeugdaten aus AI-Extraktion für Enrichment
+          const vehicleData = {
+            make: aiExtractedData.vehicle?.make,
+            model: aiExtractedData.vehicle?.model,
+            variant: aiExtractedData.vehicle?.variant,
+            year: aiExtractedData.vehicle?.year || aiExtractedData.vehicle?.first_registration_year,
+            mileage: aiExtractedData.vehicle?.mileage,
+            fuel_type: aiExtractedData.technical?.fuel_type,
+            transmission: aiExtractedData.technical?.transmission,
+            body_type: aiExtractedData.vehicle?.body_type
+          }
+          
+          // Nur enrichen wenn wir genug Basisdaten haben
+          if (vehicleData.make && vehicleData.model) {
+            const enrichmentResult = await enrichmentService.enrichVehicleData(
+              pdf_document_id,
+              vehicleData,
+              pdfData.text
+            )
+            
+            console.log('[PDF Extract] Enrichment completed successfully')
+            console.log('[PDF Extract] Enriched fields:', Object.keys(enrichmentResult.enriched_data).length)
+            
+            // Füge Enrichment-Info zur Response hinzu
+            return NextResponse.json({
+              success: true,
+              extracted_data: extractedData,
+              ai_data: aiExtractedData,
+              enrichment_data: enrichmentResult.enriched_data,
+              confidence_score: aiExtractedData.metadata.confidence_score,
+              validation: validation,
+              tokens_used: aiExtractedData.metadata.tokens_used || 0,
+              extraction_time: extractionTime,
+              enrichment_completed: true,
+              message: validation.warnings.length > 0 
+                ? `Extraktion und Enrichment erfolgreich mit ${validation.warnings.length} Warnungen` 
+                : 'Extraktion und Enrichment erfolgreich abgeschlossen'
+            })
+          } else {
+            console.log('[PDF Extract] Skipping enrichment - insufficient vehicle data')
+          }
+        } catch (enrichmentError) {
+          // Enrichment-Fehler sind nicht kritisch
+          console.error('[PDF Extract] Enrichment failed (non-critical):', enrichmentError)
+        }
+        
         return NextResponse.json({
           success: true,
           extracted_data: extractedData,
@@ -199,6 +266,7 @@ export async function POST(request: NextRequest) {
           validation: validation,
           tokens_used: aiExtractedData.metadata.tokens_used || 0,
           extraction_time: extractionTime,
+          enrichment_completed: false,
           message: validation.warnings.length > 0 
             ? `Extraktion erfolgreich mit ${validation.warnings.length} Warnungen` 
             : 'Extraktion erfolgreich abgeschlossen'

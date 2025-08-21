@@ -52,7 +52,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
     { name: 'Angebotsverwaltung', href: '/dashboard/offers', icon: File02, current: false },
     { name: 'Landingpages', href: '/dashboard/landingpages', icon: Link03, current: false },
     { name: 'Leads', href: '/dashboard/leads', icon: Users03, current: false },
-    { name: 'Einstellungen', href: '/dashboard/settings', icon: Settings01, current: false },
+    { name: 'Profil & Team', href: '/dashboard/settings', icon: Settings01, current: false },
   ];
 
   return (

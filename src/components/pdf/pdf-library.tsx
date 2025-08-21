@@ -13,6 +13,8 @@ import { Upload01, File02, CheckCircle, AlertCircle, Clock, Plus, Eye, Trash02, 
 import { PdfDocument } from '@/types/pdf.types'
 import { formatDistanceToNow } from 'date-fns'
 import { de } from 'date-fns/locale'
+import { WizardProvider } from '@/components/application/landing-page-wizard/wizard-context'
+import { WizardContainer } from '@/components/application/landing-page-wizard/wizard-container'
 
 export function PdfLibrary() {
   const [documents, setDocuments] = useState<PdfDocument[]>([])
@@ -28,6 +30,9 @@ export function PdfLibrary() {
   const [deleting, setDeleting] = useState(false)
   const [progressMap, setProgressMap] = useState<Record<string, number>>({})
   const [pollingDocuments, setPollingDocuments] = useState<Set<string>>(new Set())
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [selectedDocumentForWizard, setSelectedDocumentForWizard] = useState<PdfDocument | null>(null)
+  const [wizardOfferId, setWizardOfferId] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -376,6 +381,55 @@ export function PdfLibrary() {
     return aiData?.vehicle?.year || null
   }
 
+  const handleCreateLandingPage = async (doc: PdfDocument) => {
+    try {
+      // Get current user and organization
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('Bitte melden Sie sich an')
+        return
+      }
+
+      const { data: userData } = await supabase
+        .from('user_profiles')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!userData?.organization_id) {
+        alert('Keine Organisation gefunden')
+        return
+      }
+
+      // Create a new offer in the database with required fields
+      const { data: offer, error } = await supabase
+        .from('offer')
+        .insert({
+          organization_id: userData.organization_id,
+          pdf_document_id: doc.id,
+          offer_type_id: null, // Will be set in wizard
+          model: 'Platzhalter', // Required field, will be updated in wizard
+          status: 'draft'
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating offer:', error)
+        alert('Fehler beim Erstellen des Angebots')
+        return
+      }
+
+      // Open wizard with the new offer
+      setWizardOfferId(offer.id)
+      setSelectedDocumentForWizard(doc)
+      setWizardOpen(true)
+    } catch (error) {
+      console.error('Error creating landing page:', error)
+      alert('Fehler beim Erstellen der Landing Page')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -597,6 +651,7 @@ export function PdfLibrary() {
                     variant="primary"
                     className="w-full mb-3"
                     iconTrailing={ArrowRight}
+                    onClick={() => handleCreateLandingPage(doc)}
                   >
                     Landingpage erstellen
                   </Button>
@@ -904,6 +959,26 @@ export function PdfLibrary() {
           </Dialog>
         </Modal>
       </ModalOverlay>
+
+      {/* Landing Page Wizard */}
+      {wizardOpen && wizardOfferId && selectedDocumentForWizard && (
+        <WizardProvider 
+          offerId={wizardOfferId}
+          pdfDocumentId={selectedDocumentForWizard.id}
+          extractedData={selectedDocumentForWizard.extracted_data}
+        >
+          <WizardContainer 
+            isOpen={wizardOpen}
+            onClose={() => {
+              setWizardOpen(false)
+              setWizardOfferId(null)
+              setSelectedDocumentForWizard(null)
+              // Refresh documents to show updated status
+              fetchDocuments()
+            }}
+          />
+        </WizardProvider>
+      )}
     </>
   )
 }
