@@ -9,7 +9,10 @@ import { useWizardContext } from './wizard-context'
 export function WizardNavigation() {
   const { currentStep, steps, goToStep, goNext, goPrevious, isSaving } = useWizardContext()
   
-  const progressValue = ((currentStep - 1) / (steps.length - 1)) * 100
+  // Berechne Fortschritt mit Mindestfortschritt für Schritt 1
+  const progressValue = currentStep === 1 
+    ? 14 // Mindestfortschritt für Schritt 1 (etwa 1/7)
+    : ((currentStep - 1) / (steps.length - 1)) * 100
 
   return (
     <div className="space-y-6">
@@ -67,7 +70,7 @@ export function WizardFooter() {
   const isLastStep = currentStep === steps.length
 
   return (
-    <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-secondary">
+    <div className="flex items-center justify-between gap-3 px-6 py-4">
       <Button
         variant="secondary"
         size="lg"

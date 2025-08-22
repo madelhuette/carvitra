@@ -19,7 +19,7 @@ export default function LandingPage() {
       <main className="flex flex-col items-center justify-center px-4 py-20">
         <div className="max-w-container text-center">
           <h1 className="text-4xl font-bold text-primary">
-            Willkommen bei CARVITRA
+            Willkommen bei carvitra
           </h1>
           <p className="mt-4 text-lg text-secondary">
             Die Plattform für digitale Fahrzeugvermarktung

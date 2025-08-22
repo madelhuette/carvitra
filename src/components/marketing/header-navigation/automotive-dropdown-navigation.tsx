@@ -40,7 +40,7 @@ const platformItems = [
 const resourceItems = [
     {
         title: "Dokumentation",
-        subtitle: "Komplette Anleitung zur CARVITRA Plattform",
+        subtitle: "Komplette Anleitung zur carvitra Plattform",
         href: "#docs",
         Icon: File02,
     },

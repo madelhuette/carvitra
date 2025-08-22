@@ -3,6 +3,7 @@
 import type { ReactNode, Ref } from "react";
 import { Checkbox as AriaCheckbox, type CheckboxProps as AriaCheckboxProps } from "react-aria-components";
 import { cx } from "@/utils/cx";
+import { getAriaLabel, extractTextFromNode } from "@/utils/aria-helpers";
 
 export interface CheckboxBaseProps {
     size?: "sm" | "md";
@@ -80,9 +81,18 @@ export const Checkbox = ({ label, hint, size = "sm", className, ...ariaCheckboxP
         },
     };
 
+    // Generate fallback aria-label when no visible label is present
+    const ariaLabel = getAriaLabel(
+        ariaCheckboxProps['aria-label'],
+        extractTextFromNode(label),
+        undefined, // no placeholder for checkboxes
+        ariaCheckboxProps.name
+    );
+
     return (
         <AriaCheckbox
             {...ariaCheckboxProps}
+            aria-label={ariaLabel}
             className={(state) =>
                 cx(
                     "flex items-start",

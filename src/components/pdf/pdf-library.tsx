@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/base/buttons/button'
-import { Badge } from '@/components/base/badges/badges'
+import { Badge, BadgeWithIcon } from '@/components/base/badges/badges'
 import { EmptyState } from '@/components/application/empty-state/empty-state'
 import { LoadingIndicator } from '@/components/application/loading-indicator/loading-indicator'
 import { ModalOverlay, Modal, Dialog } from '@/components/application/modals/modal'
@@ -257,13 +257,14 @@ export function PdfLibrary() {
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.uploaded
     
     return (
-      <Badge
-        color={config.color}
-        iconLeading={config.icon}
+      <BadgeWithIcon 
+        type="pill-color"
+        color={config.color} 
         size="md"
+        iconLeading={config.icon}
       >
         {config.label}
-      </Badge>
+      </BadgeWithIcon>
     )
   }
 
@@ -586,7 +587,7 @@ export function PdfLibrary() {
                         {/* Leasingrate prominent anzeigen */}
                         {getMonthlyRate(doc) && (
                           <div className="mt-2">
-                            <Badge color="brand" size="md">
+                            <Badge type="pill-color" color="brand" size="md">
                               ab {getMonthlyRate(doc)}€/Monat
                             </Badge>
                           </div>
@@ -603,6 +604,7 @@ export function PdfLibrary() {
                         {doc.extracted_data?.ai_extracted?.metadata?.confidence_score && (
                           <div className="mt-2 flex items-center gap-2">
                             <Badge 
+                              type="pill-color"
                               color={
                                 doc.extracted_data.ai_extracted.metadata.confidence_score > 70 
                                   ? 'success' 
@@ -628,15 +630,17 @@ export function PdfLibrary() {
               {/* Body */}
               <div className="p-5">
                 {/* File Meta Info */}
-                <div className="flex items-center justify-between text-xs text-secondary mb-4">
-                  <span>{formatFileSize(doc.file_size_bytes)}</span>
-                  {doc.page_count && (
-                    <>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span>{doc.page_count} Seiten</span>
-                    </>
-                  )}
-                  <span>
+                <div className="flex items-center gap-3 text-xs text-secondary mb-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium">{formatFileSize(doc.file_size_bytes)}</span>
+                    {doc.page_count && (
+                      <>
+                        <span className="text-gray-400">•</span>
+                        <span className="font-medium">{doc.page_count} {doc.page_count === 1 ? 'Seite' : 'Seiten'}</span>
+                      </>
+                    )}
+                  </div>
+                  <span className="ml-auto text-gray-500">
                     {formatDistanceToNow(new Date(doc.created_at), {
                       addSuffix: true,
                       locale: de

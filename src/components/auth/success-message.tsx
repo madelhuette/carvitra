@@ -26,7 +26,7 @@ export const SuccessMessage = ({
                 return {
                     icon: <CheckCircle className="size-8 text-success-600" />,
                     bgColor: "bg-success-100",
-                    title: `Willkommen bei CARVITRA${userName ? `, ${userName}` : ""}!`,
+                    title: `Willkommen bei carvitra${userName ? `, ${userName}` : ""}!`,
                     subtitle: "Ihre Registrierung war erfolgreich.",
                     description: `Wir haben Ihnen eine Bestätigungs-E-Mail an ${email || "Ihre E-Mail Adresse"} gesendet.`,
                     tips: [
@@ -42,7 +42,7 @@ export const SuccessMessage = ({
                     bgColor: "bg-brand-100",
                     title: "E-Mail erfolgreich bestätigt!",
                     subtitle: "Ihr Konto ist nun vollständig aktiviert.",
-                    description: "Sie können jetzt alle Funktionen von CARVITRA nutzen.",
+                    description: "Sie können jetzt alle Funktionen von carvitra nutzen.",
                     tips: [
                         "Laden Sie Ihr erstes PDF-Angebot hoch",
                         "Lassen Sie die KI Ihre Fahrzeugdaten extrahieren",

@@ -142,7 +142,13 @@ export const Badge = <T extends BadgeTypes>(props: BadgeProps<T>) => {
         [badgeTypes.badgeModern]: badgeSizes,
     };
 
-    return <span className={cx(colors.common, sizes[type][size], colors.styles[color].root, props.className)}>{children}</span>;
+    // Null-Check und Fallback hinzufügen
+    const safeColor = color || "gray";
+    const colorStyles = colors?.styles?.[safeColor] || colors?.styles?.gray || filledColors.gray;
+    const commonStyles = colors?.common || "";
+    const sizeStyles = sizes[type]?.[size] || "";
+
+    return <span className={cx(commonStyles, sizeStyles, colorStyles.root, props.className)}>{children}</span>;
 };
 
 interface BadgeWithDotProps<T extends BadgeTypes> {
@@ -176,9 +182,15 @@ export const BadgeWithDot = <T extends BadgeTypes>(props: BadgeWithDotProps<T>) 
         [badgeTypes.badgeModern]: badgeSizes,
     };
 
+    // Null-Check und Fallback hinzufügen
+    const safeColor = color || "gray";
+    const colorStyles = colors?.styles?.[safeColor] || colors?.styles?.gray || filledColors.gray;
+    const commonStyles = colors?.common || "";
+    const sizeStyles = sizes[type]?.[size] || "";
+
     return (
-        <span className={cx(colors.common, sizes[type][size], colors.styles[color].root, className)}>
-            <Dot className={colors.styles[color].addon} size="sm" />
+        <span className={cx(commonStyles, sizeStyles, colorStyles.root, className)}>
+            <Dot className={colorStyles.addon} size="sm" />
             {children}
         </span>
     );
@@ -236,11 +248,17 @@ export const BadgeWithIcon = <T extends BadgeTypes>(props: BadgeWithIconProps<T>
         [badgeTypes.badgeModern]: badgeSizes,
     };
 
+    // Null-Check und Fallback hinzufügen
+    const safeColor = color || "gray";
+    const colorStyles = colors?.styles?.[safeColor] || colors?.styles?.gray || filledColors.gray;
+    const commonStyles = colors?.common || "";
+    const sizeStyles = sizes[type]?.[size]?.[icon] || "";
+
     return (
-        <span className={cx(colors.common, sizes[type][size][icon], colors.styles[color].root, className)}>
-            {IconLeading && <IconLeading className={cx(colors.styles[color].addon, "size-3 stroke-3")} />}
+        <span className={cx(commonStyles, sizeStyles, colorStyles.root, className)}>
+            {IconLeading && <IconLeading className={cx(colorStyles.addon, "size-3 stroke-3")} />}
             {children}
-            {IconTrailing && <IconTrailing className={cx(colors.styles[color].addon, "size-3 stroke-3")} />}
+            {IconTrailing && <IconTrailing className={cx(colorStyles.addon, "size-3 stroke-3")} />}
         </span>
     );
 };
@@ -275,8 +293,14 @@ export const BadgeWithFlag = <T extends BadgeTypes>(props: BadgeWithFlagProps<T>
         [badgeTypes.badgeModern]: badgeSizes,
     };
 
+    // Null-Check und Fallback hinzufügen
+    const safeColor = color || "gray";
+    const colorStyles = colors?.styles?.[safeColor] || colors?.styles?.gray || filledColors.gray;
+    const commonStyles = colors?.common || "";
+    const sizeStyles = sizes[type]?.[size] || "";
+
     return (
-        <span className={cx(colors.common, sizes[type][size], colors.styles[color].root)}>
+        <span className={cx(commonStyles, sizeStyles, colorStyles.root)}>
             <img src={`https://www.untitledui.com/images/flags/${flag}.svg`} className="size-4 max-w-none rounded-full" alt={`${flag} flag`} />
             {children}
         </span>

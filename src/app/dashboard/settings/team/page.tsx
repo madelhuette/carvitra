@@ -3,15 +3,11 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/inputs/input";
-import { Label } from "@/components/base/forms/label";
-import { Select } from "@/components/base/selects/select";
-import { Badge } from "@/components/base/badges/badge";
-import { Modal } from "@/components/application/modal/modal";
-import { Dialog } from "@/components/application/dialog/dialog";
-import { Table } from "@/components/application/tables/table";
-import { Avatar } from "@/components/base/avatars/avatar";
-import { TableRowActionsDropdown } from "@/components/application/tables/table-row-actions-dropdown";
+import { Input } from "@/components/base/input/input";
+import { Label } from "@/components/base/input/label";
+import { Select } from "@/components/base/select/select";
+import { Badge } from "@/components/base/badges/badges";
+import { Avatar } from "@/components/base/avatar/avatar";
 import { 
   UserPlus02,
   Mail01,

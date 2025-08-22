@@ -2,7 +2,7 @@
 
 import { PlayCircle, ArrowRight, Zap, Clock, TrendUp01, CheckCircle, Shield01 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
-import { Badge } from "@/components/base/badges/badges";
+import { BadgeWithIcon } from "@/components/base/badges/badges";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
@@ -29,10 +29,14 @@ export const HeroSectionNew = () => {
                     <div className="relative z-10">
                         {/* Success Badge */}
                         <div className="mb-6 inline-flex">
-                            <Badge size="lg" color="success">
-                                <Zap className="mr-1.5 size-3.5" />
+                            <BadgeWithIcon 
+                                type="pill-color"
+                                size="lg" 
+                                color="success"
+                                iconLeading={Zap}
+                            >
                                 Neu: KI-gestützte PDF-Analyse
-                            </Badge>
+                            </BadgeWithIcon>
                         </div>
 
                         {/* Main Headline */}

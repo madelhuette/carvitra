@@ -1,0 +1,73 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
+import { EmptyState } from '@/components/application/empty-state/empty-state'
+import { Link03, Plus } from '@untitledui/icons'
+import { Button } from '@/components/base/buttons/button'
+
+export default async function LandingpagesPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/signin')
+  }
+
+  // Get user profile data
+  const { data: profile } = await supabase
+    .from('users')
+    .select('first_name, last_name, organization:organizations(name)')
+    .eq('id', user.id)
+    .single()
+
+  const userData = {
+    email: user.email || '',
+    firstName: profile?.first_name || '',
+    lastName: profile?.last_name || '',
+    companyName: profile?.organization?.name || 'Unbekannte Organisation'
+  }
+
+  return (
+    <DashboardLayout user={userData}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Landingpage-Verwaltung</h1>
+            <p className="mt-1 text-secondary">
+              Erstellen, bearbeiten und verwalten Sie Ihre Fahrzeug-Landingpages.
+            </p>
+          </div>
+          <Button
+            size="lg"
+            iconLeading={Plus}
+            disabled
+          >
+            Landingpage erstellen
+          </Button>
+        </div>
+        
+        <EmptyState size="lg">
+          <EmptyState.FeaturedIcon icon={Link03} />
+          <EmptyState.Content>
+            <EmptyState.Title>Noch keine Landingpages</EmptyState.Title>
+            <EmptyState.Description>
+              Erstellen Sie Ihre erste professionelle Landingpage aus einem PDF-Angebot.
+            </EmptyState.Description>
+          </EmptyState.Content>
+          <EmptyState.Footer>
+            <Button
+              size="lg"
+              iconLeading={Plus}
+              disabled
+            >
+              Landingpage erstellen
+            </Button>
+          </EmptyState.Footer>
+        </EmptyState>
+      </div>
+    </DashboardLayout>
+  )
+}

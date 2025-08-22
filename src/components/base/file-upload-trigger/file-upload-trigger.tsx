@@ -45,10 +45,19 @@ export const FileTrigger = (props: FileTriggerProps) => {
 
     // Clone the child element and add an `onClick` handler to open the file dialog.
     const mainElement = cloneElement(clonableElement as DetailedReactHTMLElement<HTMLAttributes<HTMLElement>, HTMLElement>, {
-        onClick: () => {
+        onClick: (e: React.MouseEvent) => {
+            // Call the original onClick handler if it exists
+            const originalOnClick = (clonableElement as any).props?.onClick;
+            if (originalOnClick) {
+                originalOnClick(e);
+            }
+            
+            // Clear the input value to ensure onChange fires even when same file is selected
             if (inputRef.current?.value) {
                 inputRef.current.value = "";
             }
+            
+            // Trigger the file input click
             inputRef.current?.click();
         },
     });

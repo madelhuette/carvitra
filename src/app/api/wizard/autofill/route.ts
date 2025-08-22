@@ -58,6 +58,10 @@ export async function POST(request: NextRequest) {
     // Apply field mapping for select fields
     const mappedResult = await applyFieldMapping(result, step)
     
+    // Fix date formats if needed
+    const fixedResult = fixDateFormats(mappedResult.fields, step)
+    mappedResult.fields = fixedResult
+    
     // Calculate detailed confidence scores
     const { overallConfidence, fieldConfidences } = calculateDetailedConfidence(mappedResult, step)
     
@@ -96,9 +100,22 @@ function getPromptForStep(step: number, extractedData: any): string {
           "make_name": "Marke als Text (z.B. BMW, Mercedes-Benz, Audi)",
           "model": "Modellbezeichnung",
           "trim": "Ausstattungsvariante falls vorhanden",
-          "vehicle_category_name": "Fahrzeugkategorie als Text (z.B. SUV, Limousine, Kombi)",
-          "vehicle_type_name": "Fahrzeugtyp als Text"
+          "vehicle_type_name": "Fahrzeugtyp als Text (z.B. SUV, Limousine, Kombi)",
+          "offer_type_name": "Fahrzeugzustand (Neuwagen oder Gebrauchtwagen)",
+          "offer_type_indicators": {
+            "baujahr": "Baujahr/Erstzulassung als Jahr falls vorhanden",
+            "kilometerstand": "Kilometerstand als Zahl falls vorhanden (0 bei Neuwagen)",
+            "erstzulassung": "Erstzulassungsdatum als String falls vorhanden", 
+            "überführungskosten": "true falls Überführungskosten erwähnt",
+            "vorbesitzer": "Anzahl Vorbesitzer als Zahl falls erwähnt",
+            "neuwagen_begriffe": "true falls Begriffe wie 'Neuwagen', 'neu', '0 km' im Text"
+          }
         }
+        
+        SPEZIELLE LOGIK für Fahrzeugzustand:
+        - GEBRAUCHTWAGEN wenn: Baujahr vorhanden ODER Kilometerstand > 0 ODER Erstzulassung erwähnt
+        - NEUWAGEN wenn: Überführungskosten erwähnt ODER explizit "Neuwagen"/"0 km" ODER kein Baujahr/Kilometerstand
+        - Bei Unsicherheit: Tendiere zu Gebrauchtwagen wenn Baujahr vorhanden, sonst Neuwagen
         
         WICHTIG: Gib die Marke und Kategorien als Text zurück, nicht als IDs.
         Gib nur die gefundenen Felder als JSON zurück.
@@ -374,4 +391,60 @@ function getExpectedFieldsForStep(step: number): number {
   }
   
   return expectedCounts[step] || 1
+}
+
+function fixDateFormats(fields: any, step: number): any {
+  const dateFields = ['availability_date', 'first_registration', 'general_inspection_date']
+  const fixedFields = { ...fields }
+  
+  for (const field of dateFields) {
+    if (fixedFields[field]) {
+      const value = fixedFields[field]
+      
+      // Fix common date format issues
+      if (typeof value === 'string') {
+        // Handle MM/YYYY format
+        if (/^\d{2}\/\d{4}$/.test(value)) {
+          const [month, year] = value.split('/')
+          fixedFields[field] = `${year}-${month}-01`
+        }
+        // Handle DD.MM.YYYY format
+        else if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+          const [day, month, year] = value.split('.')
+          fixedFields[field] = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+        }
+        // Handle YYYY/MM/DD format
+        else if (/^\d{4}\/\d{2}\/\d{2}$/.test(value)) {
+          fixedFields[field] = value.replace(/\//g, '-')
+        }
+        // Handle MM-YYYY format
+        else if (/^\d{2}-\d{4}$/.test(value)) {
+          const [month, year] = value.split('-')
+          fixedFields[field] = `${year}-${month}-01`
+        }
+        // Handle YYYY format only
+        else if (/^\d{4}$/.test(value)) {
+          fixedFields[field] = `${value}-01-01`
+        }
+        // If already in correct format or close to it, leave as is
+        else if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          // Try to parse with Date constructor as last resort
+          try {
+            const date = new Date(value)
+            if (!isNaN(date.getTime())) {
+              const year = date.getFullYear()
+              const month = String(date.getMonth() + 1).padStart(2, '0')
+              const day = String(date.getDate()).padStart(2, '0')
+              fixedFields[field] = `${year}-${month}-${day}`
+            }
+          } catch (e) {
+            // If all else fails, remove the field
+            delete fixedFields[field]
+          }
+        }
+      }
+    }
+  }
+  
+  return fixedFields
 }

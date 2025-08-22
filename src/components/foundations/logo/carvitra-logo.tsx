@@ -54,6 +54,7 @@ export const CarvtraLogo = ({
                 width={dimensions.width}
                 height={dimensions.height}
                 className="transition-opacity duration-200"
+                style={{ width: 'auto', height: 'auto' }}
                 priority
             />
         </div>

@@ -1,403 +1,51 @@
-"use client";
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { SettingsTabs } from './settings-tabs';
+import { ProfileContent } from './profile-content';
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Input } from "@/components/base/input/input";
-import { Label } from "@/components/base/input/label";
-import { HintText } from "@/components/base/input/hint-text";
-import { Button } from "@/components/base/buttons/button";
-import { AvatarProfilePhoto } from "@/components/base/avatar/avatar-profile-photo";
-import { FileUpload } from "@/components/application/file-upload/file-upload-base";
-// Modal and Dialog components temporarily removed - custom implementation used
-import { 
-  Mail01, 
-  Phone, 
-  Upload01,
-  User01,
-  Check,
-  AlertCircle
-} from "@untitledui/icons";
-
-interface UserProfile {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  mobile: string;
-  position: string;
-  department: string;
-  avatar_url: string;
-}
-
-export default function ProfileSettingsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-
-      // Load user profile
-      const { data: profileData, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      // Add email from auth user
-      setProfile({
-        ...profileData,
-        email: user.email || ''
-      });
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      setErrorMessage('Fehler beim Laden des Profils');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!profile) return;
-    
-    setSaving(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    try {
-      const supabase = createClient();
-      
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          phone: profile.phone,
-          mobile: profile.mobile,
-          position: profile.position,
-          department: profile.department,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      setSuccessMessage("Änderungen erfolgreich gespeichert");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      setErrorMessage('Fehler beim Speichern der Änderungen');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAvatarUpload = async (files: File[]) => {
-    if (!files[0] || !profile) return;
-    
-    setUploadingAvatar(true);
-    setErrorMessage("");
-
-    try {
-      const supabase = createClient();
-      const file = files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.user_id}/${Date.now()}.${fileExt}`;
-
-      // Upload to storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('user-avatars')
-        .upload(fileName, file, {
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-avatars')
-        .getPublicUrl(fileName);
-
-      // Update profile
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({ 
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      setProfile({ ...profile, avatar_url: publicUrl });
-      setUploadModalOpen(false);
-      setSuccessMessage("Profilbild erfolgreich aktualisiert");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      setErrorMessage('Fehler beim Hochladen des Profilbilds');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!profile) return;
-    
-    try {
-      const supabase = createClient();
-      
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ 
-          avatar_url: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      setProfile({ ...profile, avatar_url: '' });
-      setSuccessMessage("Profilbild erfolgreich entfernt");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error('Error removing avatar:', error);
-      setErrorMessage('Fehler beim Entfernen des Profilbilds');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-tertiary">Lade Profildaten...</p>
-      </div>
-    );
+export default async function ProfileSettingsPage() {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect('/auth/login');
   }
 
-  if (!profile) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-tertiary">Profil konnte nicht geladen werden</p>
-      </div>
-    );
-  }
+  // Hole zusätzliche User-Daten
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('first_name, last_name')
+    .eq('user_id', user.id)
+    .single();
+
+  const userData = {
+    email: user.email || '',
+    firstName: profile?.first_name || user.user_metadata?.first_name || '',
+    lastName: profile?.last_name || user.user_metadata?.last_name || '',
+    companyName: user.user_metadata?.company_name || '',
+  };
 
   return (
-    <div className="p-6">
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="mb-6 flex items-center gap-2 p-3 rounded-lg bg-success-subtle border border-success-subtle">
-          <Check className="size-5 text-success" />
-          <p className="text-sm text-success">{successMessage}</p>
+    <DashboardLayout user={userData}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="border-b border-secondary pb-5">
+          <h1 className="text-2xl font-semibold text-primary">Einstellungen</h1>
+          <p className="text-sm text-tertiary mt-1">
+            Verwalten Sie Ihre persönlichen Daten, Organisation und Team
+          </p>
         </div>
-      )}
-      
-      {errorMessage && (
-        <div className="mb-6 flex items-center gap-2 p-3 rounded-lg bg-error-subtle border border-error-subtle">
-          <AlertCircle className="size-5 text-error" />
-          <p className="text-sm text-error">{errorMessage}</p>
-        </div>
-      )}
 
-      {/* Profile Photo Section */}
-      <div className="mb-8 pb-8 border-b border-secondary">
-        <h2 className="text-lg font-semibold text-primary mb-4">Profilbild</h2>
-        <div className="flex items-center gap-6">
-          <AvatarProfilePhoto
-            size="lg"
-            src={profile.avatar_url}
-            initials={`${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`}
-            alt={`${profile.first_name} ${profile.last_name}`}
-          />
-          
-          <div className="flex flex-col gap-3">
-            <div>
-              <h3 className="text-sm font-medium text-primary">Profilfoto</h3>
-              <p className="text-sm text-tertiary">
-                JPG, PNG oder GIF (max. 1MB)
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                size="sm" 
-                variant="secondary"
-                iconLeading={Upload01}
-                onClick={() => setUploadModalOpen(true)}
-              >
-                Foto hochladen
-              </Button>
-              {profile.avatar_url && (
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  color="destructive"
-                  onClick={handleRemoveAvatar}
-                >
-                  Entfernen
-                </Button>
-              )}
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <SettingsTabs activeTab="profile" />
+
+        {/* Tab Content */}
+        <div className="bg-primary rounded-lg border border-secondary">
+          <ProfileContent />
         </div>
       </div>
-
-      {/* Personal Information Form */}
-      <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        <div>
-          <h2 className="text-lg font-semibold text-primary mb-4">Persönliche Informationen</h2>
-          
-          <div className="grid gap-6">
-            {/* Name Fields */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="firstName">Vorname</Label>
-                <Input
-                  id="firstName"
-                  value={profile.first_name || ''}
-                  onChange={(value) => setProfile({ ...profile, first_name: value })}
-                  placeholder="Max"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="lastName">Nachname</Label>
-                <Input
-                  id="lastName"
-                  value={profile.last_name || ''}
-                  onChange={(value) => setProfile({ ...profile, last_name: value })}
-                  placeholder="Mustermann"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="email">E-Mail-Adresse</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profile.email}
-                disabled
-                iconLeading={Mail01}
-              />
-              <HintText>
-                Ihre primäre E-Mail-Adresse für Anmeldung und Benachrichtigungen
-              </HintText>
-            </div>
-
-            {/* Phone Numbers */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="phone">Telefonnummer</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={profile.phone || ''}
-                  onChange={(value) => setProfile({ ...profile, phone: value })}
-                  placeholder="+49 123 456789"
-                  iconLeading={Phone}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="mobile">Mobilnummer</Label>
-                <Input
-                  id="mobile"
-                  type="tel"
-                  value={profile.mobile || ''}
-                  onChange={(value) => setProfile({ ...profile, mobile: value })}
-                  placeholder="+49 170 1234567"
-                  iconLeading={Phone}
-                />
-              </div>
-            </div>
-
-            {/* Position & Department */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  value={profile.position || ''}
-                  onChange={(value) => setProfile({ ...profile, position: value })}
-                  placeholder="Verkaufsberater"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="department">Abteilung</Label>
-                <Input
-                  id="department"
-                  value={profile.department || ''}
-                  onChange={(value) => setProfile({ ...profile, department: value })}
-                  placeholder="Verkauf"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-secondary">
-          <Button
-            variant="secondary"
-            onClick={() => loadProfile()}
-          >
-            Abbrechen
-          </Button>
-          <Button
-            type="submit"
-            loading={saving}
-            disabled={saving}
-          >
-            Änderungen speichern
-          </Button>
-        </div>
-      </form>
-
-      {/* Upload Modal */}
-      {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Profilbild hochladen</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Wählen Sie ein neues Profilbild aus
-            </p>
-            <FileUpload.Root>
-              <FileUpload.DropZone
-                hint="JPG, PNG oder GIF (max. 1MB)"
-                accept="image/jpeg,image/png,image/gif"
-                maxSize={1048576} // 1MB
-                onDropFiles={handleAvatarUpload}
-                loading={uploadingAvatar}
-              />
-            </FileUpload.Root>
-            <Button
-              onClick={() => setUploadModalOpen(false)}
-              variant="secondary"
-              className="mt-4 w-full"
-            >
-              Abbrechen
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+    </DashboardLayout>
   );
 }

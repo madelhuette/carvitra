@@ -5,7 +5,7 @@ import { Avatar } from "@/components/base/avatar/avatar";
 
 const testimonials = [
     {
-        content: "CARVITRA hat unseren Vertriebsprozess revolutioniert. Was früher Tage dauerte, erledigen wir jetzt in Minuten. Die KI-Analyse ist beeindruckend genau.",
+        content: "Carvitra hat unseren Vertriebsprozess revolutioniert. Was früher Tage dauerte, erledigen wir jetzt in Minuten. Die KI-Analyse ist beeindruckend genau.",
         author: "Michael Schmidt",
         role: "Verkaufsleiter",
         company: "Mercedes-Benz Autohaus Schmidt",
@@ -39,7 +39,7 @@ export const TestimonialSection = () => {
                         Was unsere Kunden sagen
                     </h2>
                     <p className="mt-4 text-xl text-tertiary">
-                        Über 100+ Autohäuser vertrauen bereits auf CARVITRA
+                        Über 100+ Autohäuser vertrauen bereits auf carvitra
                     </p>
                 </div>
 

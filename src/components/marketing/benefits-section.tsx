@@ -54,7 +54,7 @@ const comparisonData = {
         ]
     },
     carvitra: {
-        title: "Mit CARVITRA",
+        title: "Mit carvitra",
         color: "text-success-600",
         bgColor: "bg-success-50 dark:bg-success-900/20",
         highlight: true,
@@ -82,7 +82,7 @@ export const BenefitsSection = () => {
                         Vorteile für Ihr gesamtes Team
                     </h2>
                     <p className="mt-4 text-xl text-tertiary">
-                        CARVITRA optimiert den Arbeitsablauf für alle Beteiligten in Ihrem Autohaus
+                        carvitra optimiert den Arbeitsablauf für alle Beteiligten in Ihrem Autohaus
                     </p>
                 </div>
                 
@@ -139,7 +139,7 @@ export const BenefitsSection = () => {
                         onClick={() => setShowComparison(!showComparison)}
                         iconTrailing={ArrowRight}
                     >
-                        {showComparison ? "Vergleich ausblenden" : "Vergleich ansehen: Traditionell vs. CARVITRA"}
+                        {showComparison ? "Vergleich ausblenden" : "Vergleich ansehen: Traditionell vs. carvitra"}
                     </Button>
                 </div>
 
@@ -169,7 +169,7 @@ export const BenefitsSection = () => {
                                 <div className={`rounded-xl p-6 ${comparisonData.carvitra.bgColor} ring-2 ring-success-200 dark:ring-success-800`}>
                                     <div className="flex items-center justify-between">
                                         <h4 className={`text-lg font-semibold ${comparisonData.carvitra.color}`}>
-                                            {comparisonData.carvitra.title}
+                                            Mit carvitra
                                         </h4>
                                         <span className="rounded-full bg-success-600 px-2 py-0.5 text-xs font-medium text-white">
                                             Empfohlen
@@ -217,7 +217,7 @@ export const BenefitsSection = () => {
                         Bereit für den nächsten Schritt?
                     </h3>
                     <p className="mt-3 text-lg text-tertiary">
-                        Testen Sie CARVITRA 14 Tage kostenlos und erstellen Sie Ihre erste Landing Page in wenigen Minuten.
+                        Testen Sie carvitra 14 Tage kostenlos und erstellen Sie Ihre erste Landing Page in wenigen Minuten.
                     </p>
                     <div className="mt-6">
                         <Button size="xl" color="primary" iconTrailing={ArrowRight}>

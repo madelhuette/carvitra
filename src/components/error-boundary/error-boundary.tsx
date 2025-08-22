@@ -2,7 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { Button } from '@/components/base/buttons/button'
-import { AlertTriangle, RefreshCcw } from '@untitledui/icons'
+import { AlertTriangle, RefreshCcw05 } from '@untitledui/icons'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('ErrorBoundary')
@@ -96,16 +96,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
               <div className="flex gap-3">
                 <Button
-                  variant="secondary"
+                  color="secondary"
                   className="flex-1"
                   onClick={() => window.history.back()}
                 >
                   Zurück
                 </Button>
                 <Button
-                  variant="primary"
+                  color="primary"
                   className="flex-1"
-                  iconLeading={RefreshCcw}
+                  iconLeading={RefreshCcw05}
                   onClick={this.handleReset}
                 >
                   Neu laden

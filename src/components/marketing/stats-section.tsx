@@ -103,7 +103,7 @@ export const StatsSection = () => {
                         Zahlen, die für sich sprechen
                     </h2>
                     <p className="mt-4 text-xl text-tertiary">
-                        CARVITRA revolutioniert das Automotive-Marketing mit messbaren Ergebnissen
+                        carvitra revolutioniert das Automotive-Marketing mit messbaren Ergebnissen
                     </p>
                 </div>
 

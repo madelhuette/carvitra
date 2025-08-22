@@ -162,7 +162,7 @@ PDF-Text zur Analyse:
         metadata: {
           confidence_score: 0,
           extraction_date: new Date().toISOString(),
-          model_used: 'claude-3-5-sonnet-20241022',
+          model_used: 'claude-sonnet-4-20250514',
           error: 'Text too short or empty for meaningful extraction'
         },
       }
@@ -190,7 +190,7 @@ PDF-Text zur Analyse:
         const timeoutId = setTimeout(() => controller.abort(), timeout)
         
         const response = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: maxTokens,
           temperature: temperature,
           system: this.SYSTEM_PROMPT,
@@ -234,7 +234,7 @@ PDF-Text zur Analyse:
           metadata: {
             confidence_score: extractedData.metadata?.confidence_score || 50,
             extraction_date: new Date().toISOString(),
-            model_used: 'claude-3-5-sonnet-20241022',
+            model_used: 'claude-sonnet-4-20250514',
             tokens_used: response.usage.input_tokens + response.usage.output_tokens,
           },
         }
@@ -291,7 +291,7 @@ PDF-Text zur Analyse:
       metadata: {
         confidence_score: 0,
         extraction_date: new Date().toISOString(),
-        model_used: 'claude-3-5-sonnet-20241022',
+        model_used: 'claude-sonnet-4-20250514',
         error: lastError?.message || 'Unknown error'
       },
     }

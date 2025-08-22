@@ -77,7 +77,7 @@ export const FeaturesSection = () => {
                             {/* Badge */}
                             {feature.badge && (
                                 <div className="absolute -top-3 right-6">
-                                    <Badge size="sm" color={feature.highlight ? "brand" : "gray"}>
+                                    <Badge type="pill-color" size="sm" color={feature.highlight ? "brand" : "gray"}>
                                         {feature.badge}
                                     </Badge>
                                 </div>

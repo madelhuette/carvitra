@@ -8,11 +8,11 @@ export interface WizardStep {
 
 export interface OfferWizardData {
   // Step 1: Fahrzeugdaten
+  offer_type_id?: string
   make_id?: string
   model?: string
   trim?: string
   vehicle_type_id?: string
-  vehicle_category_id?: string
   
   // Step 2: Technische Details
   power_ps?: number
@@ -96,11 +96,15 @@ export interface WizardContextType {
   isAnalyzing: boolean
   analysisResults: AnalysisResult | null
   stepAnalysisCompleted: Record<number, boolean>
+  aiFilledFields: Set<string>
   goToStep: (step: number) => void
   goNext: () => void
   goPrevious: () => void
-  updateFormData: (data: Partial<OfferWizardData>) => void
+  updateFormData: (data: Partial<OfferWizardData>, isAiFilled?: boolean) => void
   saveProgress: () => Promise<void>
+  publishLandingPage: () => Promise<boolean>
   autoFillWithAI: (step: number) => Promise<void>
   setAnalysisState: (analyzing: boolean, results?: AnalysisResult | null) => void
+  getCachedSuggestions: (stepNumber: number) => Record<string, any>
+  setCachedSuggestions: (stepNumber: number, suggestions: Record<string, any>) => void
 }

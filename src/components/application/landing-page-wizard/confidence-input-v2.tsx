@@ -208,10 +208,10 @@ export function ConfidenceInputV2({
         )}
       </div>
       
-      {/* Confidence hint */}
+      {/* Vereinfachtes Auto-Fill Label */}
       {selectedSuggestion && !showSuggestions && (
-        <p className={cx('text-xs', getConfidenceColorClass(selectedSuggestion.confidence))}>
-          {getSourceLabel(selectedSuggestion.source)} • {selectedSuggestion.confidence}% Konfidenz
+        <p className="text-xs text-green-600 dark:text-green-400">
+          ✓ Automatisch vorausgefüllt
         </p>
       )}
     </div>

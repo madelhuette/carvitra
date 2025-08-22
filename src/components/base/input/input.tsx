@@ -8,6 +8,7 @@ import { HintText } from "@/components/base/input/hint-text";
 import { Label } from "@/components/base/input/label";
 import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { cx, sortCx } from "@/utils/cx";
+import { getAriaLabel } from "@/utils/aria-helpers";
 
 export interface InputBaseProps extends TextFieldProps {
     /** Tooltip message on hover. */
@@ -239,8 +240,15 @@ export const Input = ({
     tooltipClassName,
     ...props
 }: InputProps) => {
+    // Generate fallback aria-label when no visible label is present
+    const ariaLabel = getAriaLabel(props['aria-label'], label, placeholder);
+    
     return (
-        <TextField aria-label={!label ? placeholder : undefined} {...props} className={className}>
+        <TextField 
+            {...props} 
+            aria-label={ariaLabel}
+            className={className}
+        >
             {({ isRequired, isInvalid }) => (
                 <>
                     {label && <Label isRequired={hideRequiredIndicator ? !hideRequiredIndicator : isRequired}>{label}</Label>}

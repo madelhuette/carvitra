@@ -104,7 +104,7 @@ ${rawText.substring(0, 5000)}
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 100,
         temperature: 0,
         system: 'Du bist ein Experte für die Extraktion von Fahrzeugdaten aus deutschen Angebots-PDFs.',
@@ -196,7 +196,7 @@ ${rawText}
       logger.service('Field Extractor', 'Starting comprehensive extraction for landingpage')
       
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         temperature: 0.1,
         system: 'Du bist ein Experte für die Extraktion von Fahrzeugdaten aus deutschen Angebots-PDFs. Antworte NUR mit validem JSON.',

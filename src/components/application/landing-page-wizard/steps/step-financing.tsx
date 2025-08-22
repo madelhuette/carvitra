@@ -12,13 +12,17 @@ import { createClient } from '@/lib/supabase/client'
 import { CreditOfferData } from '@/types/wizard.types'
 import { useAutoAnalysis } from '@/hooks/useAutoAnalysis'
 import { SkeletonInput, SkeletonSelect, SkeletonCheckbox } from '@/components/base/skeleton/skeleton'
+import { SmartFieldService } from '@/services/smart-field.service'
+import type { SmartFieldResult } from '@/services/smart-field.service'
 
 export function StepFinancing() {
-  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted } = useWizardContext()
+  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted, pdfDocumentId } = useWizardContext()
   const [creditInstitutions, setCreditInstitutions] = useState<any[]>([])
   const [creditOfferTypes, setCreditOfferTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [creditOffers, setCreditOffers] = useState<CreditOfferData[]>(formData.credit_offers || [])
+  const [smartSuggestions, setSmartSuggestions] = useState<Record<string, SmartFieldResult>>({})
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const supabase = createClient()
   
   // Auto-Analyse beim ersten Betreten des Steps
@@ -44,7 +48,10 @@ export function StepFinancing() {
 
   useEffect(() => {
     loadSelectOptions()
-  }, [])
+    if (pdfDocumentId) {
+      loadSmartSuggestions()
+    }
+  }, [pdfDocumentId])
 
   useEffect(() => {
     updateFormData({ credit_offers: creditOffers })
@@ -66,6 +73,48 @@ export function StepFinancing() {
     }
   }
 
+  const loadSmartSuggestions = async () => {
+    if (!pdfDocumentId) return
+    
+    setLoadingSuggestions(true)
+    try {
+      const smartService = new SmartFieldService(supabase)
+      await smartService.initialize(pdfDocumentId)
+      
+      const suggestions = await smartService.getFinancingSuggestions()
+      setSmartSuggestions(suggestions)
+    } catch (error) {
+      console.error('Failed to load financing smart suggestions:', error)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Auto-Apply KI-Vorschläge für Finanzierung
+  useEffect(() => {
+    if (Object.keys(smartSuggestions).length === 0) return
+    
+    // Financing Available Auto-Apply
+    if (smartSuggestions['financing_available']?.suggestions?.length > 0 && formData.financing_available === undefined) {
+      const financingSuggestion = smartSuggestions['financing_available'].suggestions[0]
+      console.log(`🤖 Auto-applying Finanzierung verfügbar: ${financingSuggestion.value} (${financingSuggestion.confidence}%)`)
+      updateFormData({ financing_available: financingSuggestion.value })
+    }
+    
+  }, [smartSuggestions, formData, updateFormData])
+
+  // Auto-Apply Credit Offers
+  useEffect(() => {
+    if (smartSuggestions['credit_offers']?.suggestions?.length > 0 && creditOffers.length === 0 && formData.financing_available) {
+      const creditSuggestion = smartSuggestions['credit_offers'].suggestions[0]
+      const extractedOffers = creditSuggestion.value as any[]
+      
+      if (extractedOffers.length > 0) {
+        console.log(`🤖 Auto-creating ${extractedOffers.length} Credit-Offers (${creditSuggestion.confidence}%)`)
+        setCreditOffers(extractedOffers)
+      }
+    }
+  }, [smartSuggestions, creditOffers, formData.financing_available])
 
   const addCreditOffer = () => {
     const newOffer: CreditOfferData = {
@@ -97,15 +146,31 @@ export function StepFinancing() {
   return (
     <div className="space-y-6">
       {/* Finanzierung verfügbar */}
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="financingAvailable"
-          checked={formData.financing_available ?? false}
-          onChange={(checked) => updateFormData({ financing_available: checked })}
-        />
-        <label htmlFor="financingAvailable" className="text-sm font-medium text-primary">
-          Finanzierung/Leasing anbieten
-        </label>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="financingAvailable"
+            checked={formData.financing_available ?? false}
+            onChange={(checked) => updateFormData({ financing_available: checked })}
+          />
+          <label htmlFor="financingAvailable" className="text-sm font-medium text-primary">
+            Finanzierung/Leasing anbieten
+          </label>
+        </div>
+        
+        {/* KI-Indikator für Finanzierung */}
+        {smartSuggestions['financing_available']?.suggestions?.length > 0 && formData.financing_available && (
+          <div className="ml-6 text-xs text-green-600 dark:text-green-400">
+            ✓ Finanzierungsangebote automatisch im PDF erkannt ({smartSuggestions['financing_available'].suggestions[0].confidence}%)
+          </div>
+        )}
+        
+        {/* KI-Indikator für automatisch erstellte Angebote */}
+        {smartSuggestions['credit_offers']?.suggestions?.length > 0 && creditOffers.length > 0 && (
+          <div className="ml-6 text-xs text-green-600 dark:text-green-400">
+            ✓ {creditOffers.length} Finanzierungsangebot(e) automatisch erstellt
+          </div>
+        )}
       </div>
 
       {formData.financing_available && (

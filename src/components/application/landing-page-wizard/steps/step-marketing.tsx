@@ -10,12 +10,16 @@ import { useWizardContext } from '../wizard-context'
 import { createClient } from '@/lib/supabase/client'
 import { useAutoAnalysis } from '@/hooks/useAutoAnalysis'
 import { SkeletonInput, SkeletonTextArea } from '@/components/base/skeleton/skeleton'
+import { SmartFieldService } from '@/services/smart-field.service'
+import type { SmartFieldResult } from '@/services/smart-field.service'
 
 export function StepMarketing() {
-  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted } = useWizardContext()
+  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted, pdfDocumentId } = useWizardContext()
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
   const [checkingSlug, setCheckingSlug] = useState(false)
   const [slugTimer, setSlugTimer] = useState<NodeJS.Timeout | null>(null)
+  const [smartSuggestions, setSmartSuggestions] = useState<Record<string, SmartFieldResult>>({})
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const supabase = createClient()
   
   // Auto-Analyse beim ersten Betreten des Steps
@@ -40,8 +44,54 @@ export function StepMarketing() {
   })
 
   useEffect(() => {
-    // Placeholder for initialization
-  }, [])
+    if (pdfDocumentId) {
+      loadSmartSuggestions()
+    }
+  }, [pdfDocumentId])
+
+  const loadSmartSuggestions = async () => {
+    if (!pdfDocumentId) return
+    
+    setLoadingSuggestions(true)
+    try {
+      const smartService = new SmartFieldService(supabase)
+      await smartService.initialize(pdfDocumentId)
+      
+      const suggestions = await smartService.getMarketingSuggestions()
+      setSmartSuggestions(suggestions)
+    } catch (error) {
+      console.error('Failed to load marketing smart suggestions:', error)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Auto-Apply KI-Vorschläge für Marketing
+  useEffect(() => {
+    if (Object.keys(smartSuggestions).length === 0) return
+    
+    // SEO Title Auto-Apply
+    if (smartSuggestions['seo_title']?.suggestions?.length > 0 && !formData.seo_title) {
+      const titleSuggestion = smartSuggestions['seo_title'].suggestions[0]
+      console.log(`🤖 Auto-applying SEO-Titel: ${titleSuggestion.value} (${titleSuggestion.confidence}%)`)
+      updateFormData({ seo_title: titleSuggestion.value })
+    }
+    
+    // SEO Description Auto-Apply
+    if (smartSuggestions['seo_description']?.suggestions?.length > 0 && !formData.seo_description) {
+      const descSuggestion = smartSuggestions['seo_description'].suggestions[0]
+      console.log(`🤖 Auto-applying SEO-Beschreibung: ${descSuggestion.value} (${descSuggestion.confidence}%)`)
+      updateFormData({ seo_description: descSuggestion.value })
+    }
+    
+    // URL Slug Auto-Apply
+    if (smartSuggestions['url_slug']?.suggestions?.length > 0 && !formData.slug) {
+      const slugSuggestion = smartSuggestions['url_slug'].suggestions[0]
+      console.log(`🤖 Auto-applying URL-Slug: ${slugSuggestion.value} (${slugSuggestion.confidence}%)`)
+      updateFormData({ slug: slugSuggestion.value })
+    }
+    
+  }, [smartSuggestions, formData, updateFormData])
 
   useEffect(() => {
     // Auto-generate slug from model and make when they change
@@ -178,6 +228,13 @@ export function StepMarketing() {
                 {seoTitleLength}/60 Zeichen
               </span>
             </div>
+            
+            {/* KI-Indikator für SEO-Titel */}
+            {smartSuggestions['seo_title']?.suggestions?.length > 0 && formData.seo_title && (
+              <div className="text-xs text-green-600 dark:text-green-400">
+                ✓ SEO-Titel automatisch generiert ({smartSuggestions['seo_title'].suggestions[0].confidence}%)
+              </div>
+            )}
           </div>
         </div>
 
@@ -209,6 +266,13 @@ export function StepMarketing() {
                 {seoDescriptionLength}/160 Zeichen
               </span>
             </div>
+            
+            {/* KI-Indikator für SEO-Beschreibung */}
+            {smartSuggestions['seo_description']?.suggestions?.length > 0 && formData.seo_description && (
+              <div className="text-xs text-green-600 dark:text-green-400">
+                ✓ SEO-Beschreibung automatisch generiert ({smartSuggestions['seo_description'].suggestions[0].confidence}%)
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -304,6 +368,13 @@ export function StepMarketing() {
                 <span className="text-error-600">URL bereits vergeben</span>
               )}
             </div>
+            
+            {/* KI-Indikator für URL-Slug */}
+            {smartSuggestions['url_slug']?.suggestions?.length > 0 && formData.slug && (
+              <div className="text-xs text-green-600 dark:text-green-400">
+                ✓ URL-Slug automatisch generiert ({smartSuggestions['url_slug'].suggestions[0].confidence}%)
+              </div>
+            )}
           </div>
         </div>
 

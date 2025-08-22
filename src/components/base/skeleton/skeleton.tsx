@@ -65,7 +65,9 @@ export function SkeletonInput({ label, className, hint }: SkeletonInputProps) {
   return (
     <div className={cx('space-y-1.5', className)}>
       {label && (
-        <Skeleton variant="text" width="30%" height={16} className="mb-1.5" />
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          {label}
+        </div>
       )}
       <Skeleton variant="rectangular" height={40} className="rounded-lg" />
       {hint && (
@@ -84,7 +86,9 @@ export function SkeletonSelect({ label, className }: SkeletonSelectProps) {
   return (
     <div className={cx('space-y-1.5', className)}>
       {label && (
-        <Skeleton variant="text" width="35%" height={16} className="mb-1.5" />
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          {label}
+        </div>
       )}
       <Skeleton variant="rectangular" height={40} className="rounded-lg" />
     </div>

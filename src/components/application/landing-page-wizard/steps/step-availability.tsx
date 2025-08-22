@@ -10,11 +10,15 @@ import { useWizardContext } from '../wizard-context'
 import { createClient } from '@/lib/supabase/client'
 import { useAutoAnalysis } from '@/hooks/useAutoAnalysis'
 import { SkeletonInput, SkeletonSelect, SkeletonCheckbox } from '@/components/base/skeleton/skeleton'
+import { SmartFieldService } from '@/services/smart-field.service'
+import type { SmartFieldResult } from '@/services/smart-field.service'
 
 export function StepAvailability() {
-  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted } = useWizardContext()
+  const { formData, updateFormData, autoFillWithAI, extractedData, setAnalysisState, stepAnalysisCompleted, pdfDocumentId } = useWizardContext()
   const [availabilityTypes, setAvailabilityTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [smartSuggestions, setSmartSuggestions] = useState<Record<string, SmartFieldResult>>({})
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const supabase = createClient()
   
   // Auto-Analyse beim ersten Betreten des Steps
@@ -40,7 +44,10 @@ export function StepAvailability() {
 
   useEffect(() => {
     loadAvailabilityTypes()
-  }, [])
+    if (pdfDocumentId) {
+      loadSmartSuggestions()
+    }
+  }, [pdfDocumentId])
 
   const loadAvailabilityTypes = async () => {
     try {
@@ -58,6 +65,71 @@ export function StepAvailability() {
     }
   }
 
+  const loadSmartSuggestions = async () => {
+    if (!pdfDocumentId) return
+    
+    setLoadingSuggestions(true)
+    try {
+      const smartService = new SmartFieldService(supabase)
+      await smartService.initialize(pdfDocumentId)
+      
+      const suggestions = await smartService.getAvailabilitySuggestions()
+      setSmartSuggestions(suggestions)
+    } catch (error) {
+      console.error('Failed to load availability smart suggestions:', error)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Auto-Apply KI-Vorschläge für Verfügbarkeit
+  useEffect(() => {
+    if (Object.keys(smartSuggestions).length === 0) return
+    
+    // Price Auto-Apply (Gross)
+    if (smartSuggestions['list_price_gross']?.suggestions?.length > 0 && !formData.list_price_gross) {
+      const priceSuggestion = smartSuggestions['list_price_gross'].suggestions[0]
+      console.log(`🤖 Auto-applying Bruttopreis: ${priceSuggestion.value}€ (${priceSuggestion.confidence}%)`)
+      updateFormData({ 
+        list_price_gross: priceSuggestion.value,
+        list_price_net: Math.round((priceSuggestion.value / 1.19) * 100) / 100
+      })
+    }
+    
+    // Mileage Auto-Apply
+    if (smartSuggestions['mileage_count']?.suggestions?.length > 0 && !formData.mileage_count) {
+      const mileageSuggestion = smartSuggestions['mileage_count'].suggestions[0]
+      console.log(`🤖 Auto-applying Kilometerstand: ${mileageSuggestion.value} km (${mileageSuggestion.confidence}%)`)
+      updateFormData({ mileage_count: mileageSuggestion.value })
+    }
+    
+    // First Registration Auto-Apply
+    if (smartSuggestions['first_registration']?.suggestions?.length > 0 && !formData.first_registration) {
+      const regSuggestion = smartSuggestions['first_registration'].suggestions[0]
+      console.log(`🤖 Auto-applying Erstzulassung: ${regSuggestion.value} (${regSuggestion.confidence}%)`)
+      updateFormData({ first_registration: regSuggestion.value })
+    }
+    
+    // Owner Count Auto-Apply
+    if (smartSuggestions['owner_count']?.suggestions?.length > 0 && !formData.owner_count) {
+      const ownerSuggestion = smartSuggestions['owner_count'].suggestions[0]
+      console.log(`🤖 Auto-applying Vorbesitzer: ${ownerSuggestion.value} (${ownerSuggestion.confidence}%)`)
+      updateFormData({ owner_count: ownerSuggestion.value })
+    }
+    
+  }, [smartSuggestions, formData, updateFormData])
+
+  // Auto-Apply für Availability Type ID
+  useEffect(() => {
+    if (smartSuggestions['availability_type_id']?.suggestions?.length > 0 && !formData.availability_type_id && availabilityTypes.length > 0) {
+      const availSuggestion = smartSuggestions['availability_type_id'].suggestions[0]
+      const matchingAvailType = availabilityTypes.find(a => a.name === availSuggestion.value)
+      if (matchingAvailType) {
+        console.log(`🤖 Auto-applying Status: ${availSuggestion.value} (${availSuggestion.confidence}%)`)
+        updateFormData({ availability_type_id: matchingAvailType.id })
+      }
+    }
+  }, [smartSuggestions, availabilityTypes, formData.availability_type_id, updateFormData])
 
   // Calculate net from gross or vice versa (assuming 19% VAT)
   const handleGrossPriceChange = (value: string) => {
@@ -103,6 +175,33 @@ export function StepAvailability() {
               <Select.Item key={type.id} id={type.id} label={type.name} />
             ))}
           </Select>
+          
+          {/* Smart Suggestions für Verfügbarkeitsstatus */}
+          {smartSuggestions['availability_type_id']?.suggestions && smartSuggestions['availability_type_id'].suggestions.length > 0 && (
+            <div className="mt-2 p-2 bg-secondary/5 border border-primary/10 rounded-lg">
+              <div className="text-xs font-medium text-secondary mb-1">KI-Einschätzung:</div>
+              <div className="text-sm">
+                {smartSuggestions['availability_type_id'].suggestions.map((suggestion, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="font-medium">{suggestion.value}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      suggestion.confidence >= 90 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                      suggestion.confidence >= 70 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                      'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                    }`}>
+                      {suggestion.confidence}%
+                    </span>
+                    <span className="text-xs text-tertiary">{suggestion.reasoning}</span>
+                  </div>
+                ))}
+              </div>
+              {formData.availability_type_id && (
+                <div className="mt-1 text-xs text-green-600 dark:text-green-400">
+                  ✓ Automatisch übernommen
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
@@ -132,6 +231,12 @@ export function StepAvailability() {
               value={formData.list_price_gross || ''}
               onChange={handleGrossPriceChange}
             />
+            {/* KI-Indikator für Preis */}
+            {smartSuggestions['list_price_gross']?.suggestions?.length > 0 && formData.list_price_gross && (
+              <div className="mt-1 text-xs text-green-600 dark:text-green-400">
+                ✓ Preis automatisch aus PDF extrahiert ({smartSuggestions['list_price_gross'].suggestions[0].confidence}%)
+              </div>
+            )}
           </div>
           
           <div>

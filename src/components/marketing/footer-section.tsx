@@ -90,7 +90,7 @@ export const FooterSection = () => {
                     <div className="flex flex-col items-center justify-between space-y-4 lg:flex-row lg:space-y-0">
                         <div className="flex flex-col items-center space-y-2 lg:flex-row lg:space-x-4 lg:space-y-0">
                             <h3 className="text-sm font-semibold text-primary">
-                                CARVITRA Newsletter
+                                carvitra Newsletter
                             </h3>
                             <p className="text-sm text-tertiary">
                                 Bleiben Sie über neue Features und Automotive-Marketing-Tipps informiert
@@ -113,7 +113,7 @@ export const FooterSection = () => {
                 <div className="mt-8 border-t border-secondary_alt pt-8">
                     <div className="flex flex-col items-center justify-between space-y-4 lg:flex-row lg:space-y-0">
                         <p className="text-xs text-quaternary">
-                            © {new Date().getFullYear()} CARVITRA. Alle Rechte vorbehalten.
+                            © {new Date().getFullYear()} carvitra. Alle Rechte vorbehalten.
                         </p>
                         <div className="flex space-x-6">
                             <a href="#privacy" className="text-xs text-quaternary hover:text-tertiary">

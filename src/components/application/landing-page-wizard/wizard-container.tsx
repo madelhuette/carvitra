@@ -60,7 +60,7 @@ export function WizardContainer({ isOpen, onClose }: WizardContainerProps) {
         fieldsIdentified={analysisResults?.fieldsIdentified || null}
       />
       
-      <SlideoutMenu isOpen={isOpen}>
+      <SlideoutMenu isOpen={isOpen} aria-label="Landingpage-Assistent">
         <SlideoutMenu.Header onClose={handleClose}>
           <div className="flex items-start justify-between">
             <div>

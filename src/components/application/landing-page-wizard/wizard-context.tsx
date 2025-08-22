@@ -93,6 +93,8 @@ export function WizardProvider({
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(null)
   const [stepAnalysisCompleted, setStepAnalysisCompleted] = useState<Record<number, boolean>>({})
   const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null)
+  const [smartSuggestionsCache, setSmartSuggestionsCache] = useState<Record<number, Record<string, any>>>({})
+  const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set())
 
   // Update steps when currentStep changes
   useEffect(() => {
@@ -145,8 +147,20 @@ export function WizardProvider({
     }
   }, [currentStep])
 
-  const updateFormData = useCallback((data: Partial<OfferWizardData>) => {
+  const updateFormData = useCallback((data: Partial<OfferWizardData>, isAiFilled: boolean = false) => {
     setFormData(prev => ({ ...prev, ...data }))
+    // Track AI-filled fields with functional update to preserve existing fields
+    if (isAiFilled) {
+      setAiFilledFields(prev => {
+        const newAiFields = new Set(prev)
+        Object.keys(data).forEach(key => {
+          newAiFields.add(key)
+          console.log(`🤖 Marking field as AI-filled: ${key}`)
+        })
+        console.log(`📊 Total AI-filled fields: ${newAiFields.size}`, Array.from(newAiFields))
+        return newAiFields
+      })
+    }
   }, [])
 
   const saveProgress = useCallback(async () => {
@@ -356,7 +370,7 @@ export function WizardProvider({
       if (!response.ok) throw new Error('Failed to auto-fill')
 
       const result = await response.json()
-      updateFormData(result.fields)
+      updateFormData(result.fields, true) // Mark as AI-filled
       
       // Return analysis metadata
       return {
@@ -381,6 +395,18 @@ export function WizardProvider({
     }
   }, [])
 
+  // Smart Suggestions Cache Management
+  const getCachedSuggestions = useCallback((stepNumber: number) => {
+    return smartSuggestionsCache[stepNumber] || {}
+  }, [smartSuggestionsCache])
+
+  const setCachedSuggestions = useCallback((stepNumber: number, suggestions: Record<string, any>) => {
+    setSmartSuggestionsCache(prev => ({
+      ...prev,
+      [stepNumber]: suggestions
+    }))
+  }, [])
+
   const value: WizardContextType = {
     currentStep,
     steps,
@@ -393,6 +419,7 @@ export function WizardProvider({
     isAnalyzing,
     analysisResults,
     stepAnalysisCompleted,
+    aiFilledFields,
     goToStep,
     goNext,
     goPrevious,
@@ -400,7 +427,9 @@ export function WizardProvider({
     saveProgress,
     publishLandingPage,
     autoFillWithAI,
-    setAnalysisState
+    setAnalysisState,
+    getCachedSuggestions,
+    setCachedSuggestions
   }
 
   return (

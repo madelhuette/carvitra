@@ -34,7 +34,7 @@ export default async function OffersPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">Angebotsverwaltung</h1>
           <p className="mt-1 text-secondary">
-            Verwalten Sie Ihre PDF-Angebote und erstellen Sie daraus professionelle Landingpages.
+            Verwalten Sie Ihre Fahrzeugangebote und erstellen Sie daraus professionelle Landingpages.
           </p>
         </div>
         <PdfLibrary />

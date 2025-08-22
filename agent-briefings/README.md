@@ -11,11 +11,12 @@ agent-briefings/
 ├── README.md                      # Diese Datei
 ├── database-integrity-agent.md    # Datenbank-Konsistenz-Prüfung
 ├── design-compliance-agent.md     # UI/UX Design-Compliance
-├── test-automation-agent.md       # Automatisierte E2E-Tests
-└── .claude/                      # Claude-spezifische Konfigurationen
-    ├── database-integrity-checker.md
-    ├── design-compliance-checker.md
-    └── test-automation-checker.md
+└── test-automation-agent.md       # Automatisierte E2E-Tests
+
+.claude/agents/                    # Claude-spezifische Agent-Konfigurationen
+├── database-integrity-checker.md
+├── design-compliance-checker.md
+└── test-automation-checker.md
 ```
 
 ## 🎯 Agent-Beschreibungen
@@ -87,7 +88,7 @@ Alle Agenten haben einen eingebauten Selbstlern-Mechanismus:
 ### Manuelle Updates
 Bei strukturellen Änderungen:
 1. Update der Haupt-Briefing-Datei
-2. Update der Claude-Config in `.claude/`
+2. Update der Claude-Config in `.claude/agents/`
 3. Test der Agent-Funktionalität
 4. Dokumentation in diesem README
 
@@ -101,7 +102,7 @@ Bei strukturellen Änderungen:
 ## 🔗 Verwandte Dokumentation
 
 - **CLAUDE.md**: Hauptdokumentation für Entwicklungsrichtlinien
-- **Supabase MCP**: `/agent-briefings/.claude/` für MCP-Konfigurationen
+- **Agent-Konfigurationen**: `.claude/agents/` für Claude-spezifische Agenten
 - **Playwright Config**: `playwright.config.ts` für Test-Setup
 
 ## 📚 Agent-Kollaboration
@@ -117,9 +118,9 @@ graph LR
 ## 🆕 Neue Agenten hinzufügen
 
 1. Erstelle `{domain}-{action}-agent.md` in diesem Verzeichnis
-2. Füge Claude-Config in `.claude/{name}.md` hinzu
+2. Füge Claude-Config in `.claude/agents/{name}.md` hinzu
 3. Update dieses README
-4. Teste Agent-Funktionalität
+4. Teste Agent-Funktionalität mit `/agents` Befehl
 5. Dokumentiere in CLAUDE.md
 
 ---

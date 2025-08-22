@@ -30,7 +30,7 @@ export const Slider = ({ labelPosition = "default", minValue = 0, maxValue = 100
     };
 
     return (
-        <AriaSlider {...rest} {...{ minValue, maxValue }} formatOptions={formatOptions ?? defaultFormatOptions}>
+        <AriaSlider {...{ minValue, maxValue }} {...rest} formatOptions={formatOptions ?? defaultFormatOptions}>
             <AriaLabel />
             <AriaSliderTrack className="relative h-6 w-full">
                 {({ state: { values, getThumbValue, getThumbPercent, getFormattedValue } }) => {

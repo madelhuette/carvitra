@@ -5,7 +5,7 @@ export default function LoginPage() {
     return (
         <AuthLayout
             title="Willkommen zurück"
-            subtitle="Melden Sie sich in Ihrem CARVITRA Konto an"
+            subtitle="Melden Sie sich in Ihrem carvitra Konto an"
         >
             <LoginForm />
         </AuthLayout>

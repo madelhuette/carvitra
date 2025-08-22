@@ -55,7 +55,7 @@ export default function SuccessPage() {
             case "registration":
                 return {
                     title: "Erfolgreich registriert!",
-                    subtitle: "Ihr CARVITRA Konto wurde erstellt"
+                    subtitle: "Ihr carvitra Konto wurde erstellt"
                 };
             case "verification":
                 return {

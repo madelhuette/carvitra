@@ -10,6 +10,7 @@ import { HintText } from "@/components/base/input/hint-text";
 import { Label } from "@/components/base/input/label";
 import { cx } from "@/utils/cx";
 import { isReactComponent } from "@/utils/is-react-component";
+import { getAriaLabel } from "@/utils/aria-helpers";
 import { ComboBox } from "./combobox";
 import { Popover } from "./popover";
 import { SelectItem } from "./select-item";
@@ -57,6 +58,7 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, placeho
     return (
         <AriaButton
             ref={ref}
+            aria-label={placeholder}
             className={cx(
                 "relative flex w-full cursor-pointer items-center rounded-lg bg-primary shadow-xs ring-1 ring-primary outline-hidden transition duration-100 ease-linear ring-inset",
                 (isFocused || isOpen) && "ring-2 ring-brand",
@@ -109,9 +111,16 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, placeho
 export const SelectContext = createContext<{ size: "sm" | "md" }>({ size: "sm" });
 
 const Select = ({ placeholder = "Select", placeholderIcon, size = "sm", children, items, label, hint, tooltip, className, ...rest }: SelectProps) => {
+    // Generate comprehensive aria-label fallback
+    const ariaLabel = getAriaLabel(rest['aria-label'], label, placeholder);
+    
     return (
         <SelectContext.Provider value={{ size }}>
-            <AriaSelect {...rest} className={(state) => cx("flex flex-col gap-1.5", typeof className === "function" ? className(state) : className)}>
+            <AriaSelect 
+                {...rest} 
+                aria-label={ariaLabel}
+                className={(state) => cx("flex flex-col gap-1.5", typeof className === "function" ? className(state) : className)}
+            >
                 {(state) => (
                     <>
                         {label && (
@@ -123,7 +132,11 @@ const Select = ({ placeholder = "Select", placeholderIcon, size = "sm", children
                         <SelectValue {...state} {...{ size, placeholder }} placeholderIcon={placeholderIcon} />
 
                         <Popover size={size} className={rest.popoverClassName}>
-                            <AriaListBox items={items} className="size-full outline-hidden">
+                            <AriaListBox 
+                                items={items} 
+                                className="size-full outline-hidden"
+                                aria-label={ariaLabel ? `${ariaLabel} Optionen` : 'Optionen auswählen'}
+                            >
                                 {children}
                             </AriaListBox>
                         </Popover>
